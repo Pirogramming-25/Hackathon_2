@@ -85,4 +85,44 @@ const MISSIONS = {
         guide: null,
     },
 
+    //  심화 1 : 쿠폰 사용 — 1~3단계에 이어지지 않는 독립 미션 (홈 화면에서 바로 진입)
+    //  결제하기 → "쿠폰 사용하시겠습니까?" → 사용하기 시 바코드 스캔 → 결제하시겠습니까?
+    //  tutorial(안내) → practice(안내 없음) 2단계로 진행 (advanced_tutorial.js 에서 처리)
+    coupon: {
+        title: "심화: 아메리카노를 담고 쿠폰을 사용해 결제하기",
+        judge: "coupon",
+        timeLimit: 150,
+        correctMenu: "americano",
+        target: { temp: "hot", size: "small", qty: 1, place: "eatin", useCoupon: true },
+        options: OPTION_SET,
+        guide: {
+            menu: { text: "아메리카노를 눌러 담아 주세요", highlight: "americano" },
+            option: { text: "‘따뜻하게’ 등 옵션을 고르고 담기를 눌러 주세요", highlight: null },
+            cart: { text: "결제하기를 눌러 주세요", highlight: "btnPay" },
+            couponAsk: { text: "‘사용하기’를 눌러 쿠폰을 사용해 보세요", highlight: "couponYesBtn" },
+            barcode: { text: "바코드 찍기를 눌러 쿠폰 사용을 완료해 주세요", highlight: "barcodeBtn" },
+            payConfirm: { text: "‘예’를 눌러 결제를 진행해 주세요", highlight: "payConfirmYes" },
+        },
+    },
+
+    //  심화 2 : 포인트 적립 — 1~3단계에 이어지지 않는 독립 미션 (홈 화면에서 바로 진입)
+    //  결제하기 → "포인트 적립하시겠습니까?" → 적립하기 시 화면 키패드로 번호 입력 → 결제하시겠습니까?
+    //  tutorial(안내) → practice(안내 없음) 2단계로 진행 (advanced_tutorial.js 에서 처리)
+    point: {
+        title: "심화: 카페라떼를 담고 포인트 적립 후 결제하기",
+        judge: "point",
+        timeLimit: 150,
+        correctMenu: "latte",
+        target: { temp: "hot", size: "small", qty: 1, place: "eatin", usePoint: true },
+        options: OPTION_SET,
+        guide: {
+            menu: { text: "카페라떼를 눌러 담아 주세요", highlight: "latte" },
+            option: { text: "옵션을 고르고 담기를 눌러 주세요", highlight: null },
+            cart: { text: "결제하기를 눌러 주세요", highlight: "btnPay" },
+            pointAsk: { text: "‘적립하기’를 눌러 포인트를 적립해 보세요", highlight: "pointYesBtn" },
+            keypad: { text: "화면 키패드로 전화번호를 입력하고 적립하기를 눌러 주세요", highlight: "keypadConfirm" },
+            payConfirm: { text: "‘예’를 눌러 결제를 진행해 주세요", highlight: "payConfirmYes" },
+        },
+    },
+
 };

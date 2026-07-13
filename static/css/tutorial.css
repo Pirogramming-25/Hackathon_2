@@ -93,6 +93,8 @@ body {
 
 /* ---------- 오른쪽 키오스크 프레임 ---------- */
 .kiosk {
+    position: relative;
+    /* tutorial-dim 오버레이를 키오스크 내부 기준으로 배치하기 위한 기준점 */
     border: 6px solid var(--ink);
     border-radius: 16px;
     background: #fff;
@@ -602,6 +604,127 @@ body {
     font-weight: 700;
     cursor: pointer;
     text-align: left;
+}
+
+/* ============================================================
+   심화 단계(쿠폰 사용 / 포인트 적립) 전용 스타일
+   — 기존 스타일은 그대로 두고 아래 규칙만 추가함
+============================================================ */
+
+/* tutorial 하위 단계에서 키오스크 화면 안쪽만 어둡게 하고, 안내 대상만 도드라져 보이게 함 (.kiosk 기준) */
+.tutorial-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .55);
+    z-index: 40;
+    pointer-events: none;
+    /* 클릭은 그대로 아래 요소에 전달 — 시각 효과만 담당 */
+}
+
+.tutorial-dim[hidden] {
+    display: none;
+}
+
+.hl-pop {
+    position: relative;
+    z-index: 45;
+}
+
+/* 결제하기 이후 이어지는 예/아니오 형태 팝업의 버튼 배치 (쿠폰/포인트/결제확인 공용) */
+.ask-actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 20px;
+}
+
+.ask-actions .opt-btn {
+    flex: 1;
+}
+
+/* 바코드 찍기 패널 — 키오스크 화면 바깥(오른쪽)에 있는 스캐너 장치 시뮬레이션 */
+.barcode-panel {
+    position: fixed;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    z-index: 45;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+}
+
+.barcode-panel[hidden] {
+    display: none;
+}
+
+.barcode-panel .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+}
+
+.barcode-panel .barcode-icon {
+    font-size: 48px;
+    margin: 6px 0 12px;
+}
+
+.barcode-panel p {
+    font-size: 15px;
+    font-weight: 700;
+    color: #555;
+    line-height: 1.4;
+}
+
+.barcode-panel .btn-barcode {
+    width: 100%;
+    margin-top: 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--mega-red);
+    color: #fff;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* 포인트 적립 화면 키패드 */
+.keypad-display {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+    color: #555;
+}
+
+.keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.keypad-num,
+.keypad-tool {
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    padding: 16px;
+    font-size: 19px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.keypad-tool {
+    background: #f2f2f2;
+    font-size: 14px;
 }
 
 /* ============================================================

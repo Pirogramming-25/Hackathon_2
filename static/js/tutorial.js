@@ -12,6 +12,11 @@ const state = {
     pendingOpt: null,    // { temp, size, qty, place }
     timeLeft: 120,
     timerId: null,
+    // 심화 단계(쿠폰/포인트) 전용 — advanced_tutorial.js 에서 사용
+    appliedCoupon: null,
+    pointPhone: null,
+    phase: "tutorial",   // "tutorial" | "practice" — 심화 단계에서만 의미 있음
+    advStage: "shopping", // "shopping" | "couponAsk" | "barcode" | "pointAsk" | "keypad" | "payConfirm"
 };
 
 //  DOM 
@@ -40,6 +45,10 @@ function startStep(stepId) {
     state.cart = [];
     state.pendingMenu = null;
     state.pendingOpt = null;
+    state.appliedCoupon = null;
+    state.pointPhone = null;
+    state.phase = "tutorial";
+    state.advStage = "shopping";
     missionText.textContent = MISSIONS[stepId].title;
     closeModals();
     startTimer(MISSIONS[stepId].timeLimit || 120);
@@ -52,6 +61,8 @@ function render() {
     renderGrid();
     renderCart();
     updateSummary();
+    // 심화 단계(쿠폰/포인트) UI 동기화 — advanced_tutorial.js 가 로드된 경우에만 실행
+    if (typeof renderAdvancedUI === "function") renderAdvancedUI();
 }
 
 // ---- 카테고리 탭 
@@ -215,6 +226,9 @@ document.getElementById("optionAdd").onclick = () => {
 //  결제 흐름
 btnPay.onclick = () => {
     if (!state.cart.length) { flash("메뉴를 먼저 담아 주세요"); return; }
+    // 심화 단계: 결제수단 팝업 전에 쿠폰/포인트 사용 여부부터 묻는다 (advanced_tutorial.js)
+    if (state.stepId === "coupon" && typeof openCouponAsk === "function") { openCouponAsk(); return; }
+    if (state.stepId === "point" && typeof openPointAsk === "function") { openPointAsk(); return; }
     payModal.hidden = false;
 };
 
@@ -245,6 +259,15 @@ function reportRecord(sec) {
     console.log("[기록]", state.stepId, sec + "초");
 }
 function passStep() {
+    // 심화 단계(쿠폰/포인트)는 1~3단계와 이어지지 않는 별도 미션
+    // tutorial(안내) 통과 시 practice(안내 없음)로 전환되고, practice까지 통과해야 완료 (advanced_tutorial.js)
+    if (state.stepId === "coupon" || state.stepId === "point") {
+        console.log("[통과]", state.stepId, state.phase);
+        if (typeof advancedPassStep === "function") { advancedPassStep(); return; }
+        flash("심화 단계를 완료했어요!");
+        setTimeout(() => { window.location.href = "/"; }, 1300);
+        return;
+    }
     flash("잘하셨어요!");
     console.log("[통과]", state.stepId);
     const idx = STEP_ORDER.indexOf(state.stepId);
@@ -282,6 +305,8 @@ function closeModals() {
     optionModal.hidden = true;
     payModal.hidden = true;
     optionBody.innerHTML = "";   // 숨긴 옵션 팝업에 이전 내용/안내 남지 않도록 비움
+    // 심화 단계(쿠폰/포인트) 팝업들 — advanced_tutorial.js 가 로드된 경우에만 실행
+    if (typeof closeAdvancedModals === "function") closeAdvancedModals();
 }
 function flash(msg) {
     const t = document.createElement("div");
@@ -300,6 +325,11 @@ document.getElementById("payClose").onclick = closeModals;
 document.getElementById("btnClear").onclick = () => { state.cart = []; render(); };
 document.getElementById("btnExit").onclick = () => { window.location.href = "/"; };
 document.getElementById("btnSkip").onclick = () => {
+    // 심화 단계(쿠폰/포인트): 건너뛰기 = tutorial 안내를 건너뛰고 practice로 전환 (advanced_tutorial.js)
+    if (state.stepId === "coupon" || state.stepId === "point") {
+        if (typeof advancedSkip === "function") advancedSkip();
+        return;
+    }
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) startStep(STEP_ORDER[idx + 1]);
     else flash("마지막 단계예요");
@@ -320,7 +350,8 @@ document.getElementById("carNext").onclick = () => shiftCat(1);
 //  시작 
 // 홈에서 넘어온 ?step= 파라미터로 시작 단계 결정 (없으면 step1)
 const startParam = new URLSearchParams(location.search).get("step");
-startStep(STEP_ORDER.includes(startParam) ? startParam : "step1");
+const VALID_STEPS = STEP_ORDER.concat(["coupon", "point"]); // 심화 단계 포함
+startStep(VALID_STEPS.includes(startParam) ? startParam : "step1");
 
 // 콘솔 테스트: startStep('step2') / wrap.dataset.mode='practice'
 window.startStep = startStep;

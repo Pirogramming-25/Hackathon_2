@@ -75,6 +75,9 @@
         </div>
       </div>
 
+      <!-- 심화 단계 tutorial 단계에서 키오스크 화면 안쪽만 어둡게 하는 딤 오버레이 -->
+      <div class="tutorial-dim" id="tutorialDim" hidden></div>
+
     </main>
 
   </div>
@@ -106,8 +109,97 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       아래부터는 심화 단계(쿠폰 사용 / 포인트 적립) 전용 화면.
+       결제하기를 누른 뒤 이어지는 흐름에서 advanced_tutorial.js 가 연다.
+  ============================================================ -->
+
+  <!-- ===== 심화(쿠폰): 쿠폰 사용 여부 ===== -->
+  <div class="modal-back" id="couponAskModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span>쿠폰을 사용하시겠습니까?</span>
+        <button class="modal-close" id="couponAskClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body" id="couponAskGuide"></div>
+      <div class="ask-actions">
+        <button class="opt-btn" id="couponYesBtn">사용하기</button>
+        <button class="opt-btn" id="couponNoBtn">사용 안 하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 심화(쿠폰): 바코드 찍기 — 키오스크 화면 바깥(오른쪽) 장치 시뮬레이션 ===== -->
+  <div class="barcode-panel" id="barcodePanel" hidden>
+    <button class="modal-close" id="barcodeClose" aria-label="닫기">✕</button>
+    <div id="barcodeGuide"></div>
+    <div class="barcode-icon">📷</div>
+    <p>쿠폰 바코드를<br>스캐너에 찍어 주세요</p>
+    <button class="btn-barcode" id="barcodeBtn">바코드 찍기</button>
+  </div>
+
+  <!-- ===== 심화(포인트): 포인트 적립 여부 ===== -->
+  <div class="modal-back" id="pointAskModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span>포인트를 적립하시겠습니까?</span>
+        <button class="modal-close" id="pointAskClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body" id="pointAskGuide"></div>
+      <div class="ask-actions">
+        <button class="opt-btn" id="pointYesBtn">적립하기</button>
+        <button class="opt-btn" id="pointNoBtn">적립 안 하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 심화(포인트): 화면 키패드로 전화번호 입력 ===== -->
+  <div class="modal-back" id="keypadModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span>전화번호 입력</span>
+        <button class="modal-close" id="keypadClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="keypadGuide"></div>
+        <div class="keypad-display" id="keypadDisplay">010-0000-0000</div>
+        <div class="keypad-grid">
+          <button class="keypad-num" data-num="1">1</button>
+          <button class="keypad-num" data-num="2">2</button>
+          <button class="keypad-num" data-num="3">3</button>
+          <button class="keypad-num" data-num="4">4</button>
+          <button class="keypad-num" data-num="5">5</button>
+          <button class="keypad-num" data-num="6">6</button>
+          <button class="keypad-num" data-num="7">7</button>
+          <button class="keypad-num" data-num="8">8</button>
+          <button class="keypad-num" data-num="9">9</button>
+          <button class="keypad-tool" id="keypadClear">전체삭제</button>
+          <button class="keypad-num" data-num="0">0</button>
+          <button class="keypad-tool" id="keypadBackspace">&lt;지우기</button>
+        </div>
+      </div>
+      <button class="modal-cta" id="keypadConfirm">적립하기</button>
+    </div>
+  </div>
+
+  <!-- ===== 심화: 결제 여부 확인 (쿠폰/포인트 공용) ===== -->
+  <div class="modal-back" id="payConfirmModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span>결제하시겠습니까?</span>
+        <button class="modal-close" id="payConfirmClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body" id="payConfirmGuide"></div>
+      <div class="ask-actions">
+        <button class="opt-btn" id="payConfirmYes">예</button>
+        <button class="opt-btn" id="payConfirmNo">아니요</button>
+      </div>
+    </div>
+  </div>
+
   <script src="{% static 'js/missions.js' %}"></script>
   <script src="{% static 'js/tutorial.js' %}"></script>
+  <script src="{% static 'js/advanced_tutorial.js' %}"></script>
 </body>
 
 </html>
