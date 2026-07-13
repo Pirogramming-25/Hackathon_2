@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>천천히 키오스크</title>
+  <link rel="stylesheet" href="{% static 'css/reset.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container site-nav">
+      <a href="/" class="logo-area" aria-label="천천히 키오스크 홈"></a>
+
+      <nav class="nav-menu" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/wrong-note/">오답노트</a>
+        <a href="#" class="start-link">연습 시작</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <div class="font-size-control" aria-label="글씨 크기 조절">
+    <span>글씨 크기</span>
+    <button type="button" data-font-size="normal">보통</button>
+    <button type="button" data-font-size="large">크게</button>
+    <button type="button" data-font-size="xlarge">엄청 크게</button>
+  </div>
+
+  <script src="{% static 'js/font_size.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

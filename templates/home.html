@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+  <div class="home-pattern home-pattern-left"></div>
+  <div class="home-pattern home-pattern-right"></div>
+
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <p class="hero-subtitle">노년층과 디지털 초보자를 위한 키오스크 학습</p>
+      <h1>실제처럼 연습하고<br>혼자서도 자신 있게</h1>
+      <div class="hero-line"></div>
+    </div>
+
+    <article class="continue-card" id="continue-card">
+      <span id="continue-step">2단계</span>
+      <h2 id="continue-title">옵션 선택</h2>
+      <a id="continue-link" href="#">이어서 학습하기 &gt;</a>
+    </article>
+  </div>
+
+  <div class="scroll-guide">
+    <p>아래로 내려서 단계별 학습 보기</p>
+    <span>∨</span>
+    <span>∨</span>
+  </div>
+</section>
+
+<section class="step-section">
+  <div class="container">
+    <div class="step-title-row">
+      <h2>단계별로 천천히<br>연습해요</h2>
+      <p>쉬운 주문부터 옵션 선택, 결제까지 순서대로 익히고<br>자주 틀린 단계는 오답노트에서 다시 연습합니다.</p>
+    </div>
+
+    <div class="step-card-list">
+      <article class="step-card step-card-1">
+        <span>1단계</span>
+        <h3>기본 주문</h3>
+        <div class="progress-line"><div></div></div>
+      </article>
+
+      <article class="step-card step-card-2">
+        <span>2단계</span>
+        <h3>옵션 선택</h3>
+        <div class="progress-line"><div></div></div>
+      </article>
+
+      <article class="step-card step-card-3">
+        <span>3단계</span>
+        <h3>실전 주문</h3>
+        <div class="progress-line"><div></div></div>
+      </article>
+    </div>
+
+    <div class="advanced-card-list">
+      <article class="advanced-card">쿠폰 사용</article>
+      <article class="advanced-card">포인트 적립</article>
+    </div>
+  </div>
+</section>
+{% endblock %}
