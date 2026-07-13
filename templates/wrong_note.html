@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/wrong_note.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="wrong-note-section">
+  <div class="container">
+    <h1>오답노트</h1>
+    <p>아직 저장된 오답이 없습니다.</p>
+  </div>
+</section>
+{% endblock %}

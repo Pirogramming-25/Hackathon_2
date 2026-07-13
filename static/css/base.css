@@ -1,0 +1,181 @@
+:root {
+  --color-primary: #16875a;
+  --color-primary-dark: #23543c;
+  --color-accent: #c45f00;
+
+  --color-bg: #fbfaf7;
+  --color-nav: #ffffff;
+  --color-bg-pattern-1: #fff1dc;
+  --color-bg-pattern-2: #e6f4ec;
+  --color-soft-box: #fff8ed;
+
+  --color-step-1: #bcf3cc;
+  --color-step-2: #bad7ff;
+  --color-step-3: #ffbcb4;
+
+  --color-text-main: #111111;
+  --color-text-sub: #4b5563;
+
+  --font-size-normal: 18px;
+  --font-size-large: 22px;
+  --font-size-xlarge: 26px;
+
+  --container-width: 1280px;
+  --header-width: 1480px;
+  --header-height: 90px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font-size: var(--font-size-normal);
+  color: var(--color-text-main);
+  background: var(--color-bg);
+  overflow-x: hidden;
+}
+
+body.font-normal {
+  font-size: var(--font-size-normal);
+}
+
+body.font-large {
+  font-size: var(--font-size-large);
+}
+
+body.font-xlarge {
+  font-size: var(--font-size-xlarge);
+}
+
+.container {
+  width: min(100% - 96px, var(--container-width));
+  margin: 0 auto;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-height);
+  background: var(--color-nav);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.site-nav {
+  width: min(100% - 96px, var(--header-width));
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-area {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #d9d9d9;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+.nav-menu a {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.start-link {
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.font-size-control {
+  position: fixed;
+  right: 64px;
+  bottom: 56px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #f5f5f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.font-size-control span {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.font-size-control button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.font-size-control button.active {
+  background: #ef7d00;
+  color: #ffffff;
+  border-color: #ef7d00;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 76px;
+  }
+
+  .container,
+  .site-nav {
+    width: min(100% - 32px, var(--container-width));
+  }
+
+  .logo-area {
+    width: 52px;
+    height: 52px;
+  }
+
+  .nav-menu {
+    gap: 18px;
+  }
+
+  .nav-menu a {
+    font-size: 0.9rem;
+  }
+
+  .start-link {
+    padding: 12px 16px;
+    border-radius: 12px;
+  }
+
+  .font-size-control {
+    right: 16px;
+    bottom: 16px;
+    max-width: calc(100% - 32px);
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .font-size-control button {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+}

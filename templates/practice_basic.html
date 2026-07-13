@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/practice.css' %}">
+<link rel="stylesheet" href="{% static 'css/practice_basic.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- 기본 스텝 내용 -->
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/storage.js' %}"></script>
+<script src="{% static 'js/practice_basic.js' %}"></script>
+{% endblock %}

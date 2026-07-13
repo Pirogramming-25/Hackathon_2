@@ -1,0 +1,14 @@
+.wrong-note-section {
+  min-height: calc(100vh - var(--header-height));
+  padding: 100px 0;
+}
+
+.wrong-note-section h1 {
+  margin-bottom: 24px;
+  font-size: 2.6rem;
+}
+
+.wrong-note-section p {
+  color: var(--color-text-sub);
+  font-weight: 700;
+}
