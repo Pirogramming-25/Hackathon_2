@@ -7,9 +7,65 @@
 
 {% block content %}
 <section class="wrong-note-section">
+  <div class="wrong-note-pattern wrong-note-pattern-left"></div>
+  <div class="wrong-note-pattern wrong-note-pattern-right"></div>
+
   <div class="container">
-    <h1>오답노트</h1>
-    <p>아직 저장된 오답이 없습니다.</p>
+    <div class="wrong-note-header">
+      <p class="wrong-note-eyebrow">지난 학습에서 어려웠던 부분을 모았어요</p>
+      <h1>오답노트</h1>
+      <p>틀린 문제는 다시 보고, 맞춘 이력도 함께 확인하며<br>자주 틀리는 부분을 쉽게 다시 연습할 수 있어요.</p>
+    </div>
+
+    <section class="history-panel" aria-labelledby="history-title">
+      <h2 id="history-title">과거 학습 이력</h2>
+
+      <div class="history-list" id="wrong-note-list">
+        <article class="history-card is-correct">
+          <div>
+            <div class="history-meta">
+              <span class="status-badge">정답</span>
+              <span>2단계 · 옵션 선택</span>
+            </div>
+            <h3>아이스/핫 선택을 놓쳤어요</h3>
+          </div>
+          <button type="button">완료</button>
+        </article>
+
+        <article class="history-card is-wrong">
+          <div>
+            <div class="history-meta">
+              <span class="status-badge">오답</span>
+              <span>2단계 · 옵션 선택</span>
+            </div>
+            <h3>아이스/핫 선택을 놓쳤어요</h3>
+          </div>
+          <button type="button">완료</button>
+        </article>
+
+        <article class="history-card is-correct">
+          <div>
+            <div class="history-meta">
+              <span class="status-badge">정답</span>
+              <span>2단계 · 옵션 선택</span>
+            </div>
+            <h3>아이스/핫 선택을 놓쳤어요</h3>
+          </div>
+          <button type="button">완료</button>
+        </article>
+
+        <article class="history-card is-wrong">
+          <div>
+            <div class="history-meta">
+              <span class="status-badge">오답</span>
+              <span>2단계 · 옵션 선택</span>
+            </div>
+            <h3>아이스/핫 선택을 놓쳤어요</h3>
+          </div>
+          <button type="button">완료</button>
+        </article>
+      </div>
+    </section>
   </div>
 </section>
 {% endblock %}
