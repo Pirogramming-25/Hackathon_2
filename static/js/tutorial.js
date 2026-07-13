@@ -248,7 +248,7 @@ function passStep() {
     console.log("[통과]", state.stepId);
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) setTimeout(() => startStep(STEP_ORDER[idx + 1]), 1300);
-    else setTimeout(() => flash("🎉 튜토리얼을 모두 마쳤어요!"), 1300);
+    else setTimeout(() => flash("튜토리얼을 모두 마쳤어요!"), 1300);
 }
 
 //  타이머 (표시용 — 시간초과 판정은 아직)
