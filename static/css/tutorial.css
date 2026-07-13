@@ -15,27 +15,33 @@
 body {
     font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
     background: #f4f4f4;
-    padding: 24px;
+    padding: 16px;
     color: var(--ink);
     word-break: keep-all;
     /* 한글은 음절이 아닌 단어(띄어쓰기) 단위로 줄바꿈 */
+    height: 100vh;
+    overflow: hidden;
+    /* 페이지 스크롤 없이 한 화면에 — 넘치면 메뉴 영역만 내부 스크롤 */
 }
 
 /* ---------- 전체 레이아웃 ---------- */
 .wrap {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px 620px;
+    /* 키오스크를 실제처럼 세로로 긴 비율(포트레이트)로 고정 */
     gap: 20px;
-    max-width: 1240px;
     margin: 0 auto;
     align-items: stretch;
+    justify-content: center;
+    height: 100%;
+    /* body(100vh - padding) 안에 딱 맞춤 */
 }
 
 /* ---------- 왼쪽 컬럼 ---------- */
 .side {
     display: flex;
     flex-direction: column;
-    min-height: 720px;
+    min-height: 0;
 }
 
 .side-spacer {
@@ -93,7 +99,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: 720px;
+    min-height: 0;
+    /* 뷰포트 높이에 맞춰지고, 내부 메뉴 영역(.kiosk-menu)만 스크롤 */
 }
 
 /* ---------- 상단 카테고리 탭 ---------- */
@@ -146,6 +153,8 @@ body {
 .kiosk-menu {
     position: relative;
     flex: 1;
+    min-height: 0;
+    /* flex 컬럼 안에서 넘칠 때 이 영역만 스크롤되도록 */
     padding: 16px;
     overflow-y: auto;
 }
