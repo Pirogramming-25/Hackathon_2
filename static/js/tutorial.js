@@ -1,15 +1,9 @@
-// ============================================================
-//  tutorial.js
 //  키오스크 화면 렌더링 (탭 / 메뉴 그리드 / 장바구니 / 결제 팝업)
 //  + 튜토리얼/실습 mode 스위치 + 안내/하이라이트 표시
-//
-//  ※ 역할 경계
-//    - 이 파일(개발자 3): 화면 그리기, 안내/하이라이트, 담기/장바구니 등 표시용 상호작용
-//    - "올바른 메뉴/시간초과" 판정 로직(개발자 4)은 judgeXxx() 훅으로 연결만 해둠
-//      (지금은 흐름 확인용 최소 구현. 실제 판정 JS는 개발자 4가 채움)
-// ============================================================
+//  "올바른 메뉴/시간초과" 판정 로직은 judgeXxx() 훅으로 연결만 해둠
+//  (지금은 흐름 확인용 최소 구현)
 
-// ---------- 현재 상태 ----------
+//  현재 상태 
 const state = {
     stepId: "step1",
     activeCat: "reco",
@@ -20,7 +14,7 @@ const state = {
     timerId: null,
 };
 
-// ---------- DOM ----------
+//  DOM 
 const wrap = document.getElementById("wrap");
 const missionText = document.getElementById("missionText");
 const tabList = document.getElementById("tabList");
@@ -39,9 +33,7 @@ const payModal = document.getElementById("payModal");
 const MENU_BY_ID = Object.fromEntries(MENUS.map(m => [m.id, m]));
 const STEP_ORDER = ["step1", "step2", "step3"];
 
-// ============================================================
 //  진입점
-// ============================================================
 function startStep(stepId) {
     state.stepId = stepId;
     state.activeCat = "reco";
@@ -54,9 +46,7 @@ function startStep(stepId) {
     render();
 }
 
-// ============================================================
 //  전체 렌더
-// ============================================================
 function render() {
     renderTabs();
     renderGrid();
@@ -64,7 +54,7 @@ function render() {
     updateSummary();
 }
 
-// ----- 카테고리 탭 -----
+// ---- 카테고리 탭 
 function renderTabs() {
     tabList.innerHTML = CATEGORIES.map(c =>
         `<button class="tab-btn${c.id === state.activeCat ? " active" : ""}" data-cat="${c.id}">${c.label}</button>`
@@ -74,7 +64,7 @@ function renderTabs() {
     });
 }
 
-// ----- 메뉴 그리드 -----
+//  메뉴 그리드 
 function renderGrid() {
     const g = guideFor("menu");
     const items = MENUS.filter(m => m.cats.includes(state.activeCat));
@@ -97,7 +87,7 @@ function renderGrid() {
     });
 }
 
-// ----- 장바구니 목록 -----
+//  장바구니 목록 
 function renderCart() {
     if (!state.cart.length) {
         cartList.innerHTML = `<div class="cart-empty">담은 메뉴가 없습니다</div>`;
@@ -130,7 +120,7 @@ function renderCart() {
     });
 }
 
-// ----- 하단 요약(개수/합계/결제 하이라이트) -----
+//  하단 요약(개수/합계/결제 하이라이트) 
 function updateSummary() {
     const count = state.cart.reduce((s, c) => s + c.qty, 0);
     const total = state.cart.reduce((s, c) => s + MENU_BY_ID[c.menuId].price * c.qty, 0);
@@ -141,9 +131,7 @@ function updateSummary() {
     btnPay.classList.toggle("hl", !!(g && g.highlight === "btnPay"));
 }
 
-// ============================================================
 //  담기 흐름
-// ============================================================
 function onSelectMenu(menuId) {
     const m = MISSIONS[state.stepId];
 
@@ -163,7 +151,7 @@ function addToCart(menuId, qty, options) {
     render();
 }
 
-// ----- 옵션 팝업 -----
+//  옵션 팝업 
 function openOptionModal(menuId) {
     state.pendingMenu = menuId;
     state.pendingOpt = { temp: null, size: null, qty: 1, place: null };
@@ -217,16 +205,13 @@ document.getElementById("optionAdd").onclick = () => {
     const m = MISSIONS[state.stepId];
     const o = state.pendingOpt;
 
-    // (개발자4) Step2/Step3 조합 판정 훅
     if (!judgeStrict(m, o)) return;   // 지금은 항상 통과. 실제 판정은 개발자4가 채움
 
     addToCart(state.pendingMenu, o.qty, { ...o });
     closeModals();
 };
 
-// ============================================================
 //  결제 흐름
-// ============================================================
 btnPay.onclick = () => {
     if (!state.cart.length) { flash("메뉴를 먼저 담아 주세요"); return; }
     payModal.hidden = false;
@@ -246,11 +231,9 @@ function onPay(payId) {
     passStep();
 }
 
-// ============================================================
-//  판정 훅 (개발자 4 영역) — 지금은 흐름 확인용 stub
-// ============================================================
+//  판정 훅  — 지금은 흐름 확인용 stub
 function judgeStrict(m, o) {
-    // TODO(개발자4): m.target 과 o 조합 비교 후 오답이면 reportWrong + return false
+    // TODO: m.target 과 o 조합 비교 후 오답이면 reportWrong + return false
     return true;
 }
 function reportWrong(reason) {
@@ -268,9 +251,7 @@ function passStep() {
     else setTimeout(() => flash("🎉 튜토리얼을 모두 마쳤어요!"), 1300);
 }
 
-// ============================================================
 //  타이머 (표시용 — 시간초과 판정은 아직)
-// ============================================================
 function startTimer(sec) {
     state.timeLeft = sec;
     timerNum.textContent = sec;
@@ -282,10 +263,8 @@ function startTimer(sec) {
     }, 1000);
 }
 
-// ============================================================
 //  튜토리얼/실습 안내 헬퍼
 //  practice 모드면 guide 를 안 넘겨 하이라이트도 꺼짐
-// ============================================================
 function isTutorial() { return wrap.dataset.mode === "tutorial"; }
 
 function guideFor(screenKey) {
@@ -297,9 +276,7 @@ function guideHTML(g) {
     return g ? `<p class="screen-guide">👉 ${g.text}</p>` : "";
 }
 
-// ============================================================
 //  유틸 / 이벤트
-// ============================================================
 function closeModals() {
     optionModal.hidden = true;
     payModal.hidden = true;
@@ -339,7 +316,7 @@ document.getElementById("tabNext").onclick = () => shiftCat(1);
 document.getElementById("carPrev").onclick = () => shiftCat(-1);
 document.getElementById("carNext").onclick = () => shiftCat(1);
 
-// ---------- 시작 ----------
+//  시작 
 // 홈에서 넘어온 ?step= 파라미터로 시작 단계 결정 (없으면 step1)
 const startParam = new URLSearchParams(location.search).get("step");
 startStep(STEP_ORDER.includes(startParam) ? startParam : "step1");
