@@ -4,13 +4,13 @@ body {
 }
 
 body.font-large {
-  --wrong-scale: 1.15;
-  --wrong-panel-scale: 1.1;
+  --wrong-scale: 1.23;
+  --wrong-panel-scale: 1.16;
 }
 
 body.font-xlarge {
-  --wrong-scale: 1.3;
-  --wrong-panel-scale: 1.18;
+  --wrong-scale: 1.42;
+  --wrong-panel-scale: 1.28;
 }
 
 .wrong-note-section {
@@ -88,7 +88,7 @@ body.font-xlarge {
 }
 
 .history-card {
-  min-height: calc(136px * var(--wrong-scale));
+  min-height: calc(148px * var(--wrong-scale));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -96,6 +96,24 @@ body.font-xlarge {
   padding: calc(30px * var(--wrong-scale)) calc(34px * var(--wrong-scale));
   border: 1px solid transparent;
   border-radius: calc(8px * var(--wrong-scale));
+}
+
+body.font-large .history-panel {
+  padding: calc(62px * var(--wrong-scale)) calc(66px * var(--wrong-scale));
+}
+
+body.font-large .history-card {
+  min-height: calc(162px * var(--wrong-scale));
+  padding: calc(34px * var(--wrong-scale)) calc(40px * var(--wrong-scale));
+}
+
+body.font-xlarge .history-panel {
+  padding: calc(68px * var(--wrong-scale)) calc(74px * var(--wrong-scale));
+}
+
+body.font-xlarge .history-card {
+  min-height: calc(176px * var(--wrong-scale));
+  padding: calc(38px * var(--wrong-scale)) calc(46px * var(--wrong-scale));
 }
 
 .history-card.is-correct {
