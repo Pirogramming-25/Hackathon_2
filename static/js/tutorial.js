@@ -57,6 +57,9 @@ function startStep(stepId) {
 
 //  전체 렌더
 function render() {
+    // 화면을 그리기 전에 mode(tutorial/practice)를 먼저 확정한다.
+    // renderGrid/updateSummary 가 guideFor()로 mode 를 읽으므로 순서가 중요.
+    wrap.dataset.mode = state.phase;
     renderTabs();
     renderGrid();
     renderCart();
@@ -258,6 +261,17 @@ function reportWrong(reason) {
 function reportRecord(sec) {
     console.log("[기록]", state.stepId, sec + "초");
 }
+//  같은 단계 안에서 실습을 다시 시작할 때(장바구니/타이머만 초기화, 단계·phase는 유지)
+function resetRun() {
+    state.activeCat = "reco";
+    state.cart = [];
+    state.pendingMenu = null;
+    state.pendingOpt = null;
+    closeModals();
+    startTimer(MISSIONS[state.stepId].timeLimit || 120);
+    missionText.textContent = MISSIONS[state.stepId].title + (state.phase === "practice" ? " (실습)" : "");
+}
+
 function passStep() {
     // 심화 단계(쿠폰/포인트)는 1~3단계와 이어지지 않는 별도 미션
     // tutorial(안내) 통과 시 practice(안내 없음)로 전환되고, practice까지 통과해야 완료 (advanced_tutorial.js)
@@ -268,8 +282,21 @@ function passStep() {
         setTimeout(() => { window.location.href = "/"; }, 1300);
         return;
     }
+
+    // 1·2단계(가이드 있는 단계): 튜토리얼 통과 → 같은 단계 실습(안내 없음)으로 전환
+    const hasGuide = !!MISSIONS[state.stepId].guide;
+    if (hasGuide && state.phase === "tutorial") {
+        console.log("[통과]", state.stepId, "tutorial→practice");
+        flash("잘하셨어요! 이번엔 안내 없이 직접 해볼까요?");
+        state.phase = "practice";
+        resetRun();
+        render();
+        return;
+    }
+
+    // 실습까지 통과했거나 3단계(가이드 없음) → 다음 단계로
     flash("잘하셨어요!");
-    console.log("[통과]", state.stepId);
+    console.log("[통과]", state.stepId, state.phase);
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) setTimeout(() => startStep(STEP_ORDER[idx + 1]), 1300);
     else setTimeout(() => flash("튜토리얼을 모두 마쳤어요!"), 1300);
@@ -330,6 +357,16 @@ document.getElementById("btnSkip").onclick = () => {
         if (typeof advancedSkip === "function") advancedSkip();
         return;
     }
+    // 1·2단계 튜토리얼: 건너뛰기 = 안내를 건너뛰고 같은 단계 실습으로
+    const hasGuide = !!MISSIONS[state.stepId].guide;
+    if (hasGuide && state.phase === "tutorial") {
+        state.phase = "practice";
+        resetRun();
+        flash("이제 안내 없이 직접 연습해 보세요");
+        render();
+        return;
+    }
+    // 실습 중이거나 3단계 → 다음 단계로
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) startStep(STEP_ORDER[idx + 1]);
     else flash("마지막 단계예요");

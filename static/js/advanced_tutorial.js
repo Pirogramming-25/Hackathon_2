@@ -53,10 +53,20 @@ const payConfirmNo = document.getElementById("payConfirmNo");
 
 //  ---- 화면 동기화 — tutorial.js 의 render() 끝에서 훅으로 호출됨 ----
 function renderAdvancedUI() {
+    // 이전 렌더에서 남은 스포트라이트(hl-pop) 정리 후 현재 강조 요소로 다시 계산
+    document.querySelectorAll(".hl-pop").forEach(el => el.classList.remove("hl-pop"));
+
     if (!isAdvStep()) {
-        wrap.dataset.mode = "tutorial"; // 1~3단계는 항상 tutorial 표시를 유지
-        tutorialDim.hidden = true;
-        btnSkip.hidden = false;
+        // 1·2단계는 tutorial→practice 2단계로 진행, 3단계(가이드 없음)는 tutorial 고정
+        const hasGuide = !!MISSIONS[state.stepId].guide;
+        wrap.dataset.mode = hasGuide ? state.phase : "tutorial";
+        // 스포트라이트는 튜토리얼 단계에서만 (실습에선 딤/하이라이트 없음)
+        const spotlight = hasGuide && state.phase === "tutorial";
+        tutorialDim.hidden = !spotlight;
+        if (spotlight) {
+            document.querySelectorAll(".menu-item.hl, #btnPay.hl").forEach(el => el.classList.add("hl-pop"));
+        }
+        btnSkip.hidden = state.phase === "practice";
         return;
     }
 
