@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slow Kiosk - 튜토리얼</title>
+  <link rel="stylesheet" href="{% static 'css/tutorial.css' %}">
+</head>
+
+<body>
+
+  <!-- ============================================
+     레이아웃: 왼쪽(나가기 / 미션바 / 건너뛰기)
+              오른쪽(키오스크 화면)
+     data-mode: "tutorial" | "practice"
+     tutorial 이면 안내/하이라이트 ON, practice 면 OFF
+============================================ -->
+  <div class="wrap" id="wrap" data-mode="tutorial">
+
+    <!-- ===== 왼쪽 컬럼 ===== -->
+    <aside class="side">
+      <button class="btn-exit" id="btnExit">&lt; 나가기</button>
+
+      <div class="mission-bar" id="missionBar">
+        <span class="mission-emoji">🧑</span>
+        <span class="mission-text" id="missionText">1단계: 따뜻한 아메리카노 담기</span>
+      </div>
+
+      <div class="side-spacer"></div>
+
+      <button class="btn-skip" id="btnSkip">건너뛰기</button>
+    </aside>
+
+    <!-- ===== 오른쪽: 키오스크 화면 ===== -->
+    <main class="kiosk">
+
+      <!-- 상단 카테고리 탭 -->
+      <div class="kiosk-tabs">
+        <button class="tab-nav" id="tabPrev" aria-label="이전 카테고리">&lt;</button>
+        <div class="tab-list" id="tabList"><!-- JS: 카테고리 탭 --></div>
+        <button class="tab-nav" id="tabNext" aria-label="다음 카테고리">&gt;</button>
+      </div>
+
+      <!-- 메뉴 그리드 (좌우 캐러셀 화살표 포함) -->
+      <div class="kiosk-menu">
+        <button class="carousel-arrow left" id="carPrev" aria-label="이전 페이지">&lt;</button>
+        <div class="menu-grid" id="menuGrid"><!-- JS: 메뉴 카드 --></div>
+        <button class="carousel-arrow right" id="carNext" aria-label="다음 페이지">&gt;</button>
+      </div>
+
+      <!-- 하단: 장바구니 + 결제 -->
+      <div class="kiosk-cart">
+        <div class="cart-list" id="cartList"><!-- JS: 담은 메뉴 목록 --></div>
+
+        <div class="cart-summary">
+          <div class="summary-top">
+            <div class="timer-box">
+              <span class="timer-label">남은시간</span>
+              <span class="timer-value"><strong id="timerNum">120</strong>초</span>
+            </div>
+            <button class="btn-clear" id="btnClear">전체<br>삭제</button>
+          </div>
+
+          <div class="summary-count">
+            <span>선택한 상품</span>
+            <span><strong id="cartCount">0</strong> 개</span>
+          </div>
+
+          <button class="btn-pay" id="btnPay">
+            <span class="pay-icon">💳</span>
+            <span class="pay-body"><strong id="payTotal">0</strong>원<br>결제하기</span>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ===== 옵션 선택 팝업 (Step2/Step3) ===== -->
+  <div class="modal-back" id="optionModal" hidden>
+    <div class="modal option-modal">
+      <div class="modal-head">
+        <span id="optionTitle">옵션 선택</span>
+        <button class="modal-close" id="optionClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body" id="optionBody"><!-- JS: 온도/크기/수량/포장 --></div>
+      <button class="modal-cta" id="optionAdd">담기</button>
+    </div>
+  </div>
+
+  <!-- ===== 결제 창 팝업 ===== -->
+  <div class="modal-back" id="payModal" hidden>
+    <div class="modal pay-modal">
+      <div class="modal-head">
+        <span>결제 방법</span>
+        <button class="modal-close" id="payClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body pay-list">
+        <button class="pay-method" data-pay="card">카드로 결제</button>
+        <button class="pay-method" data-pay="cash">현금으로 결제</button>
+        <button class="pay-method" data-pay="mobile">간편결제</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/missions.js' %}"></script>
+  <script src="{% static 'js/tutorial.js' %}"></script>
+</body>
+
+</html>
