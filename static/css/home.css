@@ -222,6 +222,7 @@ body.font-xlarge {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  text-decoration: none;
   padding: calc(52px * var(--step-scale)) calc(38px * var(--step-scale)) calc(40px * var(--step-scale));
   border-radius: calc(20px * var(--step-scale));
   box-shadow: 0 7px 14px rgba(17, 24, 39, 0.12);
