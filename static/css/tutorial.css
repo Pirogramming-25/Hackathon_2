@@ -727,6 +727,43 @@ body {
     font-size: 14px;
 }
 
+/* 결과 창 (practice 단계 결제 완료 후 판정 결과) */
+.result-modal {
+    text-align: center;
+}
+
+.result-emoji {
+    font-size: 56px;
+    margin: 8px 0 18px;
+}
+
+.result-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+.result-checklist li {
+    font-size: 16px;
+    font-weight: 700;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f2f2f2;
+    color: #555;
+}
+
+.result-checklist li.ok {
+    background: #e9f8ee;
+    color: #1a7a3c;
+}
+
+.result-checklist li.bad {
+    background: #fdecea;
+    color: #c62817;
+}
+
 /* ============================================================
    practice 모드: 안내/하이라이트 전부 숨김
 ============================================================ */
