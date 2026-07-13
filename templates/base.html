@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>천천히 키오스크</title>
   <link rel="stylesheet" href="{% static 'css/reset.css' %}">
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -34,7 +34,7 @@
     <button type="button" data-font-size="xlarge">엄청 크게</button>
   </div>
 
-  <script src="{% static 'js/font_size.js' %}"></script>
+  <script src="{% static 'js/font_size.js' %}?v=2"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

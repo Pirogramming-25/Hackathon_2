@@ -23,6 +23,7 @@
   --container-width: 1280px;
   --header-width: 1480px;
   --header-height: 90px;
+  --nav-scale: 1;
 }
 
 html {
@@ -43,14 +44,16 @@ body.font-normal {
 
 body.font-large {
   font-size: var(--font-size-large);
+  --nav-scale: 1.12;
 }
 
 body.font-xlarge {
   font-size: var(--font-size-xlarge);
+  --nav-scale: 1.24;
 }
 
 .container {
-  width: min(100% - 96px, var(--container-width));
+  width: min(calc(100% - 96px), var(--container-width));
   margin: 0 auto;
 }
 
@@ -58,13 +61,13 @@ body.font-xlarge {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--header-height);
+  height: calc(var(--header-height) * var(--nav-scale));
   background: var(--color-nav);
   border-bottom: 2px solid #e5e7eb;
 }
 
 .site-nav {
-  width: min(100% - 96px, var(--header-width));
+  width: min(calc(100% - 96px), var(--header-width));
   height: 100%;
   margin: 0 auto;
   display: flex;
@@ -73,8 +76,8 @@ body.font-xlarge {
 }
 
 .logo-area {
-  width: 230px;
-  height: 58px;
+  width: calc(230px * var(--nav-scale));
+  height: calc(58px * var(--nav-scale));
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -90,17 +93,17 @@ body.font-xlarge {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 48px;
+  gap: calc(48px * var(--nav-scale));
 }
 
 .nav-menu a {
-  font-size: 1rem;
+  font-size: calc(1rem * var(--nav-scale));
   font-weight: 800;
 }
 
 .start-link {
-  padding: 18px 24px;
-  border-radius: 16px;
+  padding: calc(18px * var(--nav-scale)) calc(24px * var(--nav-scale));
+  border-radius: calc(16px * var(--nav-scale));
   background: var(--color-primary);
   color: #ffffff;
 }
@@ -144,14 +147,37 @@ body.font-xlarge {
   border-color: #ef7d00;
 }
 
+@media (max-width: 1024px) {
+  body.font-large {
+    --nav-scale: 1.06;
+  }
+
+  body.font-xlarge {
+    --nav-scale: 1.1;
+  }
+
+  .site-nav {
+    width: min(calc(100% - 48px), var(--header-width));
+  }
+
+  .nav-menu {
+    gap: calc(28px * var(--nav-scale));
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --header-height: 76px;
   }
 
+  body.font-large,
+  body.font-xlarge {
+    --nav-scale: 1;
+  }
+
   .container,
   .site-nav {
-    width: min(100% - 32px, var(--container-width));
+    width: min(calc(100% - 32px), var(--container-width));
   }
 
   .logo-area {
