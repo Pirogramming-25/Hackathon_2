@@ -558,6 +558,20 @@ body {
     color: var(--mega-red-dark);
 }
 
+/* 튜토리얼 딤: 선택해야 할 부분 외에는 살짝 회색으로 어둡게 */
+.menu-item.dim,
+.opt-btn.dim {
+    opacity: 0.38;
+    filter: grayscale(0.7);
+    transition: opacity .15s, filter .15s;
+}
+
+/* 실습 모드에서는 딤도 해제 */
+.wrap[data-mode="practice"] .dim {
+    opacity: 1;
+    filter: none;
+}
+
 /* 아이스 전용 메뉴 온도 안내 */
 .opt-fixed {
     padding: 14px;

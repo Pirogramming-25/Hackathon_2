@@ -70,11 +70,15 @@ function renderGrid() {
     const items = MENUS.filter(m => m.cats.includes(state.activeCat));
 
     let html = guideHTML(g);
+    const hlTarget = g && g.highlight;   // 강조 대상 메뉴 (튜토리얼+가이드일 때만 존재)
     html += items.map(item => {
-        const selected = state.cart.some(c => c.menuId === item.id) ? " selected" : "";
-        const hl = (g && g.highlight === item.id) ? " hl" : "";
+        const isSel = state.cart.some(c => c.menuId === item.id);
+        const selected = isSel ? " selected" : "";
+        const hl = (hlTarget === item.id) ? " hl" : "";
+        // 강조 대상이 있으면, 그 외 카드(이미 담은 것 제외)는 회색으로 딤 처리
+        const dim = (hlTarget && hlTarget !== item.id && !isSel) ? " dim" : "";
         return `
-      <button class="menu-item${selected}${hl}" data-menu="${item.id}">
+      <button class="menu-item${selected}${hl}${dim}" data-menu="${item.id}">
         <span class="m-thumb">${item.icon}</span>
         <span class="m-name">${item.name}</span>
         <span class="m-price">${item.price.toLocaleString()}원</span>
@@ -156,19 +160,23 @@ function openOptionModal(menuId) {
 }
 
 function renderOptionBody() {
-    const opts = MISSIONS[state.stepId].options;
+    const m = MISSIONS[state.stepId];
+    const opts = m.options;
     const sel = state.pendingOpt;
     const g = guideFor("option");
     const iceOnly = MENU_BY_ID[state.pendingMenu].iceOnly;
+
+    // 튜토리얼(가이드 있는 스텝1·2)에서는 정답 옵션만 밝게, 나머지는 딤 처리
+    const t = (isTutorial() && m.guide) ? (m.target || {}) : {};
 
     let html = guideHTML(g);
     // 아이스 전용 메뉴는 온도 선택 버튼 대신 '차가운 메뉴' 안내만 표시
     if (iceOnly) {
         html += `<div class="opt-block"><div class="opt-label">온도</div><p class="opt-fixed">🧊 차가운 메뉴예요</p></div>`;
     } else {
-        html += optBlock("온도", opts.temp, sel.temp, "temp");
+        html += optBlock("온도", opts.temp, sel.temp, "temp", t.temp);
     }
-    html += optBlock("크기", opts.size, sel.size, "size");
+    html += optBlock("크기", opts.size, sel.size, "size", t.size);
     html += `
     <div class="opt-block">
       <div class="opt-label">수량</div>
@@ -178,7 +186,7 @@ function renderOptionBody() {
         <button class="qty-btn" data-d="1">＋</button>
       </div>
     </div>`;
-    html += optBlock("포장/매장", opts.place, sel.place, "place");
+    html += optBlock("포장/매장", opts.place, sel.place, "place", t.place);
     optionBody.innerHTML = html;
 
     optionBody.querySelectorAll(".opt-btn").forEach(el => {
@@ -192,11 +200,13 @@ function renderOptionBody() {
     });
 }
 
-function optBlock(label, opts, current, group) {
+function optBlock(label, opts, current, group, dimTarget) {
     let h = `<div class="opt-block"><div class="opt-label">${label}</div><div class="opt-row">`;
     opts.forEach(op => {
         const on = current === op.id ? " on" : "";
-        h += `<button class="opt-btn${on}" data-group="${group}" data-val="${op.id}">${op.label}</button>`;
+        // 정답값(dimTarget)이 있으면 그 외 버튼은 딤 (단, 이미 선택한 버튼은 딤 제외)
+        const dim = (dimTarget && op.id !== dimTarget && current !== op.id) ? " dim" : "";
+        h += `<button class="opt-btn${on}${dim}" data-group="${group}" data-val="${op.id}">${op.label}</button>`;
     });
     return h + `</div></div>`;
 }
