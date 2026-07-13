@@ -1,20 +1,43 @@
-function applyFontSize(size) {
-  document.body.classList.remove("font-normal", "font-large", "font-xlarge");
-  document.body.classList.add(`font-${size}`);
-  localStorage.setItem("slowKioskFontSize", size);
+(function () {
+  const sizes = ["normal", "large", "xlarge"];
+  const storageKey = "slowKioskFontSize";
 
-  document.querySelectorAll("[data-font-size]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.fontSize === size);
-  });
-}
+  function getSafeSize(size) {
+    return sizes.includes(size) ? size : "normal";
+  }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const savedSize = localStorage.getItem("slowKioskFontSize") || "normal";
-  applyFontSize(savedSize);
+  function applyFontSize(size) {
+    const selectedSize = getSafeSize(size);
+    const classNames = sizes.map((item) => `font-${item}`);
 
-  document.querySelectorAll("[data-font-size]").forEach((button) => {
-    button.addEventListener("click", function () {
-      applyFontSize(button.dataset.fontSize);
+    document.documentElement.classList.remove(...classNames);
+    document.documentElement.classList.add(`font-${selectedSize}`);
+
+    if (document.body) {
+      document.body.classList.remove(...classNames);
+      document.body.classList.add(`font-${selectedSize}`);
+    }
+
+    localStorage.setItem(storageKey, selectedSize);
+
+    document.querySelectorAll("[data-font-size]").forEach((button) => {
+      button.classList.toggle("active", button.getAttribute("data-font-size") === selectedSize);
     });
-  });
-});
+  }
+
+  function initFontSizeControl() {
+    applyFontSize(localStorage.getItem(storageKey));
+
+    document.querySelectorAll("[data-font-size]").forEach((button) => {
+      button.addEventListener("click", function () {
+        applyFontSize(button.getAttribute("data-font-size"));
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initFontSizeControl);
+  } else {
+    initFontSizeControl();
+  }
+})();

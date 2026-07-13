@@ -5,13 +5,15 @@
   <meta charset="UTF-8">
   <title>천천히 키오스크</title>
   <link rel="stylesheet" href="{% static 'css/reset.css' %}">
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
   <header class="site-header">
     <div class="container site-nav">
-      <a href="/" class="logo-area" aria-label="천천히 키오스크 홈"></a>
+      <a href="/" class="logo-area" aria-label="천천히 키오스크 홈">
+        <img src="{% static 'images/logo-header.png' %}" alt="천천히 키오스크">
+      </a>
 
       <nav class="nav-menu" aria-label="주요 메뉴">
         <a href="/">홈</a>
@@ -32,7 +34,7 @@
     <button type="button" data-font-size="xlarge">엄청 크게</button>
   </div>
 
-  <script src="{% static 'js/font_size.js' %}"></script>
+  <script src="{% static 'js/font_size.js' %}?v=2"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>
