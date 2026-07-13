@@ -558,6 +558,18 @@ body {
     color: var(--mega-red-dark);
 }
 
+/* 아이스 전용 메뉴 온도 안내 */
+.opt-fixed {
+    padding: 14px;
+    border: 2px dashed #9cc3e6;
+    border-radius: 12px;
+    background: #f2f8fd;
+    color: #2f6ea5;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+}
+
 .opt-qty {
     display: flex;
     align-items: center;

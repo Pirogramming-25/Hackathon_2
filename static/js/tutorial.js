@@ -132,16 +132,9 @@ function updateSummary() {
 }
 
 //  담기 흐름
+//  온도가 옵션으로 빠졌으므로, 모든 메뉴는 옵션 팝업(온도·크기·수량·포장)을 거쳐 담는다.
 function onSelectMenu(menuId) {
-    const m = MISSIONS[state.stepId];
-
-    // Step2/Step3: 옵션 팝업을 거쳐 담기
-    if (m.judge === "strict" || m.judge === "real") {
-        openOptionModal(menuId);
-        return;
-    }
-    // Step1(flow): 바로 담기
-    addToCart(menuId, 1, null);
+    openOptionModal(menuId);
 }
 
 function addToCart(menuId, qty, options) {
@@ -154,7 +147,9 @@ function addToCart(menuId, qty, options) {
 //  옵션 팝업 
 function openOptionModal(menuId) {
     state.pendingMenu = menuId;
-    state.pendingOpt = { temp: null, size: null, qty: 1, place: null };
+    // 아이스 전용 메뉴(스무디·프라페)는 온도를 'ice'로 고정, 그 외엔 미선택
+    const iceOnly = MENU_BY_ID[menuId].iceOnly;
+    state.pendingOpt = { temp: iceOnly ? "ice" : null, size: null, qty: 1, place: null };
     optionTitle.textContent = MENU_BY_ID[menuId].name + " 옵션";
     renderOptionBody();
     optionModal.hidden = false;
@@ -164,9 +159,15 @@ function renderOptionBody() {
     const opts = MISSIONS[state.stepId].options;
     const sel = state.pendingOpt;
     const g = guideFor("option");
+    const iceOnly = MENU_BY_ID[state.pendingMenu].iceOnly;
 
     let html = guideHTML(g);
-    html += optBlock("온도", opts.temp, sel.temp, "temp");
+    // 아이스 전용 메뉴는 온도 선택 버튼 대신 '차가운 메뉴' 안내만 표시
+    if (iceOnly) {
+        html += `<div class="opt-block"><div class="opt-label">온도</div><p class="opt-fixed">🧊 차가운 메뉴예요</p></div>`;
+    } else {
+        html += optBlock("온도", opts.temp, sel.temp, "temp");
+    }
     html += optBlock("크기", opts.size, sel.size, "size");
     html += `
     <div class="opt-block">
