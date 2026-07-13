@@ -294,12 +294,19 @@ function passStep() {
         return;
     }
 
-    // 실습까지 통과했거나 3단계(가이드 없음) → 다음 단계로
+    // 실습까지 통과했거나 3단계(가이드 없음) → 다음 단계로, 마지막이면 완료 화면
     flash("잘하셨어요!");
     console.log("[통과]", state.stepId, state.phase);
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) setTimeout(() => startStep(STEP_ORDER[idx + 1]), 1300);
-    else setTimeout(() => flash("튜토리얼을 모두 마쳤어요!"), 1300);
+    else setTimeout(showDoneScreen, 1200);
+}
+
+//  1~3단계 모두 통과 시 흰 배경 완료 화면 표시
+function showDoneScreen() {
+    clearInterval(state.timerId);   // 타이머 정지
+    closeModals();
+    document.getElementById("doneScreen").hidden = false;
 }
 
 //  타이머 (표시용 — 시간초과 판정은 아직)

@@ -728,6 +728,100 @@ body {
 }
 
 /* ============================================================
+   완료 화면 (1~3단계 모두 통과)
+============================================================ */
+.done-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.done-screen[hidden] {
+    display: none;
+}
+
+.done-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.done-emoji {
+    font-size: 84px;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.done-title {
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--mega-red);
+}
+
+.done-text {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--ink);
+}
+
+.done-sub {
+    font-size: 20px;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 28px;
+}
+
+.done-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.done-btn {
+    width: 180px;
+    padding: 26px 16px;
+    border-radius: 16px;
+    border: 3px solid var(--ink);
+    background: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+}
+
+.done-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .15);
+}
+
+.done-coupon {
+    background: #fff3e0;
+    border-color: #f0a020;
+}
+
+.done-point {
+    background: #fdecea;
+    border-color: var(--mega-red);
+}
+
+.done-home {
+    margin-top: 26px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #888;
+    text-decoration: underline;
+}
+
+/* ============================================================
    practice 모드: 안내/하이라이트 전부 숨김
 ============================================================ */
 .wrap[data-mode="practice"] .screen-guide {
