@@ -71,6 +71,7 @@ const MISSIONS = {
         guide: {
             menu: { text: "아메리카노를 눌러 주세요", highlight: "americano" },
             option: { text: "차갑게 · 크게 · 2잔 · 포장을 골라 주세요", highlight: null },
+            cart: { text: "결제하기 버튼을 눌러 주세요", highlight: "btnPay" },
         },
     },
 
