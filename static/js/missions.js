@@ -43,45 +43,57 @@ const OPTION_SET = {
     place: [{ id: "eatin", label: "매장" }, { id: "takeout", label: "포장" }],
 };
 
+//  미션의 목표 메뉴 목록을 꺼낸다.
+//  기본 3단계(step1~3)는 items(복수 메뉴)를 쓰고, 심화(쿠폰/포인트)는 correctMenu/target(단일)을 그대로 쓴다.
+function missionItems(mission) {
+    return mission.items || [{ menu: mission.correctMenu, target: mission.target }];
+}
+
 const MISSIONS = {
 
-    //  Step 1 : 기본 (클릭 흐름 익히기)
+    //  Step 1 : 기본 (클릭 흐름 익히기) — 서로 다른 메뉴 2개를 담아야 완료
     step1: {
-        title: "1단계: 아메리카노 담기",
+        title: "1단계: 아메리카노 · 카페라떼 담기",
         judge: "flow",
         timeLimit: 120,
-        correctMenu: "americano",
-        target: { qty: 1 },
+        items: [
+            { menu: "americano", target: { qty: 1 } },
+            { menu: "latte", target: { qty: 1 } },
+        ],
         options: OPTION_SET,
         guide: {
-            menu: { text: "아메리카노를 눌러 주세요", highlight: "americano" },
-            option: { text: "‘따뜻하게’를 고르고 담기를 눌러 주세요", highlight: null },
-            cart: { text: "결제하기 버튼을 눌러 주세요", highlight: "btnPay" },
+            menu: { text: "아메리카노와 카페라떼를 차례로 눌러 담아 주세요" },
+            option: { text: "‘따뜻하게’를 고르고 담기를 눌러 주세요" },
+            cart: { text: "두 메뉴를 모두 담았으면 결제하기 버튼을 눌러 주세요", highlight: "btnPay" },
         },
     },
 
-    //  Step 2 : 옵션 (조합 일치)
+    //  Step 2 : 옵션 (조합 일치) — 메뉴별로 다른 옵션 조합을 정확히 맞춰야 완료
     step2: {
-        title: "2단계: 아이스 아메리카노 · 크게 · 2잔 · 포장",
+        title: "2단계: 아이스 아메리카노 크게 2잔 포장 · 카페라떼 따뜻하게 1잔 매장",
         judge: "strict",
         timeLimit: 120,
-        correctMenu: "americano",
-        target: { temp: "ice", size: "large", qty: 2, place: "takeout" },
+        items: [
+            { menu: "americano", target: { temp: "ice", size: "large", qty: 2, place: "takeout" } },
+            { menu: "latte", target: { temp: "hot", size: "small", qty: 1, place: "eatin" } },
+        ],
         options: OPTION_SET,
         guide: {
-            menu: { text: "아메리카노를 눌러 주세요", highlight: "americano" },
-            option: { text: "차갑게 · 크게 · 2잔 · 포장을 골라 주세요", highlight: null },
-            cart: { text: "결제하기 버튼을 눌러 주세요", highlight: "btnPay" },
+            menu: { text: "아메리카노와 카페라떼를 차례로 눌러 주세요" },
+            option: { text: "메뉴별 옵션(온도 · 크기 · 수량 · 포장)을 정확히 골라 담아 주세요" },
+            cart: { text: "두 메뉴를 모두 담았으면 결제하기 버튼을 눌러 주세요", highlight: "btnPay" },
         },
     },
 
-    //  Step 3 : 실전 (미션 주어짐 · 가이드/하이라이트 없음)
+    //  Step 3 : 실전 (미션 주어짐 · 가이드/하이라이트 없음) — 서로 다른 메뉴 2개 주문
     step3: {
-        title: "3단계: 카페라떼 핫 3잔 주문하고 결제하기",
+        title: "3단계: 카페라떼 핫 3잔 · 카페모카 아이스 1잔 주문하고 결제하기",
         judge: "real",
         timeLimit: 120,
-        correctMenu: "latte",
-        target: { temp: "hot", size: "large", qty: 3, place: "takeout" },
+        items: [
+            { menu: "latte", target: { temp: "hot", size: "large", qty: 3, place: "takeout" } },
+            { menu: "mocha", target: { temp: "ice", size: "small", qty: 1, place: "eatin" } },
+        ],
         options: OPTION_SET,
         guide: null,
     },
@@ -132,42 +144,61 @@ const MISSIONS = {
 //  랜덤 미션 생성기
 //  1단계 실습 / 2단계 실습 / 3단계 는 매번 랜덤 미션으로 진행한다.
 //  (1·2단계 튜토리얼은 위 MISSIONS 의 고정 미션 사용)
-//  반환: { title, correctMenu, target } — tutorial.js 가 MISSIONS[stepId] 에 덮어씀
+//  서로 다른 메뉴 2개를 뽑아 items 로 반환한다.
+//  반환: { title, items } — tutorial.js 가 MISSIONS[stepId] 에 덮어씀
 // ============================================================
 function _pickRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
+//  중복 없이 arr 에서 n개를 뽑는다
+function _pickRandomDistinct(arr, n) {
+    const pool = arr.slice();
+    const picked = [];
+    for (let i = 0; i < n && pool.length; i++) {
+        const idx = Math.floor(Math.random() * pool.length);
+        picked.push(pool.splice(idx, 1)[0]);
+    }
+    return picked;
+}
+
 function makeRandomMission(stepId, phase) {
-    const menu = _pickRandom(MENUS);
     const base = MISSIONS[stepId];
     const stepNo = { step1: "1단계", step2: "2단계", step3: "3단계" }[stepId] || "";
     const phaseTag = phase === "practice" ? " 실습" : "";
+    const menus = _pickRandomDistinct(MENUS, 2);
 
     // 1단계(flow): 옵션 없이 메뉴만 (수량 1잔 고정)
     if (base.judge === "flow") {
         return {
-            correctMenu: menu.id,
-            target: { qty: 1 },
-            title: `${stepNo}${phaseTag}: ${menu.name} 담기`,
+            items: menus.map(menu => ({ menu: menu.id, target: { qty: 1 } })),
+            title: `${stepNo}${phaseTag}: ${menus.map(m => m.name).join(" · ")} 담기`,
         };
     }
 
-    // 2·3단계: 온도·크기·수량·포장 모두 랜덤
-    const temp = menu.iceOnly ? "ice" : _pickRandom(OPTION_SET.temp).id;
-    const size = _pickRandom(OPTION_SET.size).id;
-    const qty = 1 + Math.floor(Math.random() * 3);   // 1~3잔
-    const place = _pickRandom(OPTION_SET.place).id;
+    // 2·3단계: 온도·크기·수량·포장 모두 랜덤(메뉴별로 따로 뽑음)
+    const described = menus.map(menu => {
+        const temp = menu.iceOnly ? "ice" : _pickRandom(OPTION_SET.temp).id;
+        const size = _pickRandom(OPTION_SET.size).id;
+        const qty = 1 + Math.floor(Math.random() * 3);   // 1~3잔
+        const place = _pickRandom(OPTION_SET.place).id;
 
-    const tempKo = menu.iceOnly ? "" : (temp === "hot" ? "따뜻한 " : "아이스 ");
-    const sizeKo = size === "large" ? "크게" : "보통";
-    const placeKo = place === "takeout" ? "포장" : "매장";
-    const body = `${tempKo}${menu.name} · ${sizeKo} · ${qty}잔 · ${placeKo}`;
+        const tempKo = menu.iceOnly ? "" : (temp === "hot" ? "따뜻한 " : "아이스 ");
+        const sizeKo = size === "large" ? "크게" : "보통";
+        const placeKo = place === "takeout" ? "포장" : "매장";
+
+        return {
+            menu: menu.id,
+            target: { temp, size, qty, place },
+            desc: `${tempKo}${menu.name} · ${sizeKo} · ${qty}잔 · ${placeKo}`,
+        };
+    });
+
+    const body = described.map(d => d.desc).join(" · ");
     const tail = stepId === "step3" ? " 주문하고 결제하기" : "";
 
     return {
-        correctMenu: menu.id,
-        target: { temp, size, qty, place },
+        items: described.map(({ menu, target }) => ({ menu, target })),
         title: `${stepNo}${phaseTag}: ${body}${tail}`,
     };
 }

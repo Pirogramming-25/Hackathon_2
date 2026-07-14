@@ -47,10 +47,14 @@ const FIXED_MISSION = {};
 STEP_ORDER.forEach(s => {
     FIXED_MISSION[s] = {
         title: MISSIONS[s].title,
-        correctMenu: MISSIONS[s].correctMenu,
-        target: Object.assign({}, MISSIONS[s].target),
+        items: MISSIONS[s].items.map(it => ({ menu: it.menu, target: Object.assign({}, it.target) })),
     };
 });
+
+//  현재 미션이 아직 담기지 않은 목표 메뉴 목록 (안내/하이라이트용)
+function missingMissionItems(mission) {
+    return missionItems(mission).filter(it => !state.cart.some(c => c.menuId === it.menu));
+}
 
 //  랜덤 미션 단계인지: 1·2단계 실습, 3단계
 function isRandomMissionStep(stepId, phase) {
@@ -60,7 +64,7 @@ function isRandomMissionStep(stepId, phase) {
 }
 
 //  현재 단계·phase 에 맞는 미션을 MISSIONS[stepId] 에 반영(고정 복원/랜덤 생성) + 미션 문구 갱신
-//  ※ 판정(judgeCart/judgeOptions 등)이 MISSIONS[stepId].target/correctMenu 를 읽으므로 여기서 덮어씀
+//  ※ 판정(judgeCart/judgeOptions 등)이 MISSIONS[stepId].items 를 읽으므로 여기서 덮어씀
 function applyMission() {
     const stepId = state.stepId;
     if (isRandomMissionStep(stepId, state.phase) && typeof makeRandomMission === "function") {
@@ -68,8 +72,7 @@ function applyMission() {
     } else if (FIXED_MISSION[stepId]) {
         Object.assign(MISSIONS[stepId], {
             title: FIXED_MISSION[stepId].title,
-            correctMenu: FIXED_MISSION[stepId].correctMenu,
-            target: Object.assign({}, FIXED_MISSION[stepId].target),
+            items: FIXED_MISSION[stepId].items.map(it => ({ menu: it.menu, target: Object.assign({}, it.target) })),
         });
     }
     renderMissionCard();
@@ -80,45 +83,53 @@ const STEP_BADGE = {
     coupon: "심화 목표", point: "심화 목표",
 };
 
-//  왼쪽 미션 카드: 배지(N단계 목표) + 항목별 행(메뉴/온도/크기/수량/이용 방식 ...)
+//  왼쪽 미션 카드: 배지(N단계 목표) + 목표 메뉴별 항목 그룹(메뉴/온도/크기/수량/이용 방식 ...)
 //  해당 미션에 없는 조건(target 에 키가 없거나, 온도 선택이 없는 iceOnly 메뉴)은 행 자체를 만들지 않는다.
+//  기본 3단계는 목표 메뉴가 2개라 메뉴별로 그룹을 나눠 보여준다.
 function renderMissionCard() {
     const mission = MISSIONS[state.stepId];
-    const t = mission.target || {};
-    const menu = MENU_BY_ID[mission.correctMenu];
+    const items = missionItems(mission);
 
     missionBadge.textContent = STEP_BADGE[state.stepId] || "목표";
 
-    const rows = [["메뉴", menu.name]];
+    missionRows.innerHTML = items.map((item, idx) => {
+        const t = item.target || {};
+        const menu = MENU_BY_ID[item.menu];
 
-    if (t.temp !== undefined && !menu.iceOnly) {
-        rows.push(["온도", getOptionLabel(mission, "temp", t.temp)]);
-    }
-    if (t.size !== undefined) {
-        rows.push(["크기", getOptionLabel(mission, "size", t.size)]);
-    }
-    if (t.qty !== undefined) {
-        rows.push(["수량", `${t.qty}잔`]);
-    }
-    if (t.place !== undefined) {
-        rows.push(["이용 방식", getOptionLabel(mission, "place", t.place)]);
-    }
-    const payMethod = t.payMethod ?? t.payment;
-    if (payMethod !== undefined) {
-        rows.push(["결제", getOptionLabel(mission, "payment", payMethod)]);
-    }
-    if (t.useCoupon !== undefined) {
-        rows.push(["쿠폰", t.useCoupon ? "O" : "X"]);
-    }
-    if (t.usePoint !== undefined) {
-        rows.push(["적립", t.usePoint ? "O" : "X"]);
-    }
+        const rows = [["메뉴", menu.name]];
 
-    missionRows.innerHTML = rows
-        .map(([label, value]) =>
-            `<div class="mission-row"><span class="mission-row-label">${label}</span><span class="mission-row-value">${value}</span></div>`
-        )
-        .join("");
+        if (t.temp !== undefined && !menu.iceOnly) {
+            rows.push(["온도", getOptionLabel(mission, "temp", t.temp)]);
+        }
+        if (t.size !== undefined) {
+            rows.push(["크기", getOptionLabel(mission, "size", t.size)]);
+        }
+        if (t.qty !== undefined) {
+            rows.push(["수량", `${t.qty}잔`]);
+        }
+        if (t.place !== undefined) {
+            rows.push(["이용 방식", getOptionLabel(mission, "place", t.place)]);
+        }
+        const payMethod = t.payMethod ?? t.payment;
+        if (payMethod !== undefined) {
+            rows.push(["결제", getOptionLabel(mission, "payment", payMethod)]);
+        }
+        if (t.useCoupon !== undefined) {
+            rows.push(["쿠폰", t.useCoupon ? "O" : "X"]);
+        }
+        if (t.usePoint !== undefined) {
+            rows.push(["적립", t.usePoint ? "O" : "X"]);
+        }
+
+        const label = items.length > 1 ? `<div class="mission-item-label">메뉴 ${idx + 1}</div>` : "";
+        const rowsHtml = rows
+            .map(([l, value]) =>
+                `<div class="mission-row"><span class="mission-row-label">${l}</span><span class="mission-row-value">${value}</span></div>`
+            )
+            .join("");
+
+        return `<div class="mission-item-group">${label}${rowsHtml}</div>`;
+    }).join("");
 }
 
 //  진입점
@@ -165,14 +176,15 @@ function renderTabs() {
 
 //  메뉴 그리드 
 function renderGrid() {
-    // 아직 안 담았을 때만 메뉴 안내/하이라이트. 담으면 다음(결제) 안내로 넘어감.
-    const g = state.cart.length === 0 ? guideFor("menu") : null;
+    // 목표 메뉴를 아직 다 안 담았을 때만 메뉴 안내/하이라이트. 다 담으면 다음(결제) 안내로 넘어감.
+    const missing = missingMissionItems(MISSIONS[state.stepId]);
+    const g = missing.length > 0 ? guideFor("menu") : null;
     const items = MENUS.filter(m => m.cats.includes(state.activeCat));
 
     let html = guideHTML(g);
     html += items.map(item => {
         const selected = state.cart.some(c => c.menuId === item.id) ? " selected" : "";
-        const hl = (g && g.highlight === item.id) ? " hl" : "";
+        const hl = (g && missing.some(it => it.menu === item.id)) ? " hl" : "";
         return `
       <button class="menu-item${selected}${hl}" data-menu="${item.id}">
         <span class="m-thumb">${item.icon}</span>
@@ -227,8 +239,8 @@ function updateSummary() {
     cartCount.textContent = count;
     payTotal.textContent = total.toLocaleString();
 
-    // 음료를 담은 뒤에만 결제하기 안내를 띄운다 (담기 전엔 메뉴 안내가 우선)
-    const g = state.cart.length > 0 ? guideFor("cart") : null;
+    // 목표 메뉴를 모두 담은 뒤에만 결제하기 안내를 띄운다 (다 담기 전엔 메뉴 안내가 우선)
+    const g = missingMissionItems(MISSIONS[state.stepId]).length === 0 ? guideFor("cart") : null;
     btnPay.classList.toggle("hl", !!(g && g.highlight === "btnPay"));
 }
 
@@ -239,9 +251,10 @@ function onSelectMenu(menuId) {
     if (isBaseStep() && !ensureTimeRemaining()) return;
     const m = MISSIONS[state.stepId];
     // 기본/옵션 단계는 메뉴를 누르는 순간 오답을 알려 준다.
-    if (state.phase === "tutorial" && (m.judge === "flow" || m.judge === "strict") && menuId !== m.correctMenu) {
+    if (state.phase === "tutorial" && (m.judge === "flow" || m.judge === "strict") && !missionItems(m).some(it => it.menu === menuId)) {
+        const names = missionItems(m).map(it => MENU_BY_ID[it.menu].name).join("’, ‘");
         reportWrong(
-            `‘${MENU_BY_ID[m.correctMenu].name}’ 메뉴를 선택해 주세요`,
+            `‘${names}’ 메뉴를 선택해 주세요`,
             [{ mistakeType: "menu" }]
         );
         return;
@@ -278,8 +291,9 @@ function renderOptionBody() {
     const g = guideFor("option");
     const iceOnly = MENU_BY_ID[state.pendingMenu].iceOnly;
     // 옵션 조합이 정확해야 하는 단계(step2=strict)의 튜토리얼에서만 정답 옵션 버튼에 가이드라인.
-    // 1단계(flow)·실습·실전에는 적용 안 함.
-    const t = (g && m.target && m.judge === "strict") ? m.target : null;
+    // 1단계(flow)·실습·실전에는 적용 안 함. 지금 담는 메뉴(pendingMenu)에 해당하는 목표를 찾는다.
+    const pendingItem = missionItems(m).find(it => it.menu === state.pendingMenu);
+    const t = (g && pendingItem && pendingItem.target && m.judge === "strict") ? pendingItem.target : null;
 
     let html = guideHTML(g);
     // 아이스 전용 메뉴는 온도 선택 버튼 대신 '차가운 메뉴' 안내만 표시
@@ -400,7 +414,8 @@ function judgeStrict(mission, options) {
         return true;
     }
 
-    const result = judgeOptions(mission, options);
+    const pendingItem = missionItems(mission).find(it => it.menu === state.pendingMenu);
+    const result = judgeOptions(mission, options, pendingItem && pendingItem.target);
 
     if (!result.pass) {
         reportWrong(result.reason, result.errors);
@@ -477,8 +492,9 @@ function combineJudgeResults(...results) {
     return createJudgeResult(errors);
 }
 
-function judgeOptions(mission, options = {}) {
+function judgeOptions(mission, options = {}, target) {
     const errors = [];
+    const t = target || mission.target || {};
 
     const fields = [
         {
@@ -509,11 +525,11 @@ function judgeOptions(mission, options = {}) {
             : options[field.key];
 
         const expectedValue = field.key === "qty"
-            ? Number(mission.target?.[field.key])
-            : mission.target?.[field.key];
+            ? Number(t[field.key])
+            : t[field.key];
 
         // 해당 미션에 없는 조건은 판별하지 않는다.
-        if (mission.target?.[field.key] === undefined) {
+        if (t[field.key] === undefined) {
             return;
         }
 
@@ -541,66 +557,63 @@ function judgeOptions(mission, options = {}) {
 
 function judgeCart(mission) {
     const errors = [];
+    const items = missionItems(mission);
+    const requiredMenuIds = items.map(it => it.menu);
+    const menuNames = items.map(it => MENU_BY_ID[it.menu].name).join("’, ‘");
 
-    if (state.cart.length !== 1) {
+    // 목표 메뉴가 아닌 게 담겨 있거나, 목표 메뉴 중 안 담은 게 있으면 오답
+    const extra = state.cart.filter(c => !requiredMenuIds.includes(c.menuId));
+    const missing = items.filter(it => !state.cart.some(c => c.menuId === it.menu));
+
+    if (extra.length > 0 || missing.length > 0) {
         errors.push({
             section: "메뉴 선택",
             mistakeType: "menu",
             label: "메뉴",
             selectedValue: state.cart.map(item => item.menuId),
-            expectedValue: mission.correctMenu,
-            reason: `장바구니에는 ‘${MENU_BY_ID[mission.correctMenu].name}’ 메뉴만 담아 주세요.`
+            expectedValue: requiredMenuIds,
+            reason: `장바구니에는 ‘${menuNames}’ 메뉴를 모두, 그 메뉴만 담아 주세요.`
         });
 
         return createJudgeResult(errors);
-    }
-
-    const cartItem = state.cart[0];
-
-    if (cartItem.menuId !== mission.correctMenu) {
-        errors.push({
-            section: "메뉴 선택",
-            mistakeType: "menu",
-            label: "메뉴",
-            selectedValue: cartItem.menuId,
-            expectedValue: mission.correctMenu,
-            reason:
-                `‘${MENU_BY_ID[cartItem.menuId]?.name ?? "다른 메뉴"}’를 담았어요. ` +
-                `미션 메뉴는 ‘${MENU_BY_ID[mission.correctMenu].name}’입니다.`
-        });
     }
 
     if (mission.judge === "flow") {
-        const selectedQuantity = Number(cartItem.qty);
-        const expectedQuantity = Number(mission.target?.qty ?? 1);
+        items.forEach(item => {
+            const cartItem = state.cart.find(c => c.menuId === item.menu);
+            const selectedQuantity = Number(cartItem.qty);
+            const expectedQuantity = Number(item.target?.qty ?? 1);
 
-        if (selectedQuantity !== expectedQuantity) {
-            errors.push(
-                createJudgeError({
-                    section: "옵션 선택",
-                    mistakeType: "quantity",
-                    label: "수량",
-                    selectedValue: selectedQuantity,
-                    expectedValue: expectedQuantity,
-                    selectedLabel: `${selectedQuantity}잔`,
-                    expectedLabel: `${expectedQuantity}잔`
-                })
-            );
-        }
+            if (selectedQuantity !== expectedQuantity) {
+                errors.push(
+                    createJudgeError({
+                        section: "옵션 선택",
+                        mistakeType: "quantity",
+                        label: "수량",
+                        selectedValue: selectedQuantity,
+                        expectedValue: expectedQuantity,
+                        selectedLabel: `${selectedQuantity}잔`,
+                        expectedLabel: `${expectedQuantity}잔`
+                    })
+                );
+            }
+        });
 
         return createJudgeResult(errors);
     }
 
-    const finalOptions = {
-        ...(cartItem.options ?? {}),
-        // 장바구니에서 수량을 바꾼 경우 최종 수량으로 판별한다.
-        qty: cartItem.qty
-    };
+    items.forEach(item => {
+        const cartItem = state.cart.find(c => c.menuId === item.menu);
+        const finalOptions = {
+            ...(cartItem.options ?? {}),
+            // 장바구니에서 수량을 바꾼 경우 최종 수량으로 판별한다.
+            qty: cartItem.qty
+        };
+        const result = judgeOptions(mission, finalOptions, item.target);
+        errors.push(...result.errors);
+    });
 
-    return combineJudgeResults(
-        createJudgeResult(errors),
-        judgeOptions(mission, finalOptions)
-    );
+    return createJudgeResult(errors);
 }
 
 function judgePayment(mission, payId) {

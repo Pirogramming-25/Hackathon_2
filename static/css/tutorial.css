@@ -82,7 +82,24 @@ body {
 .mission-rows {
     display: flex;
     flex-direction: column;
+    gap: 14px;
+}
+
+.mission-item-group {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
+}
+
+.mission-item-group+.mission-item-group {
+    padding-top: 14px;
+    border-top: 1.5px dashed #d9a441;
+}
+
+.mission-item-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #b3791a;
 }
 
 .mission-row {
