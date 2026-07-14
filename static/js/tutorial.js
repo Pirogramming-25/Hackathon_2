@@ -14,6 +14,7 @@ const state = {
     timerId: null,
     timeExpired: false,
     runVersion: 0,
+    retryNoteId: null,    // 오답노트에서 다시 연습 중인 카드 ID
     // 심화 단계(쿠폰/포인트) 전용 — advanced_tutorial.js 에서 사용
     appliedCoupon: null,
     pointPhone: null,
@@ -49,6 +50,7 @@ function startStep(stepId) {
     state.pendingOpt = null;
     state.appliedCoupon = null;
     state.pointPhone = null;
+    state.retryNoteId = null;
     state.phase = "tutorial";
     state.advStage = "shopping";
     state.timeExpired = false;
@@ -280,13 +282,22 @@ function onPay(payId) {
         );
 
         if (!result.pass) {
-            reportWrong(result.reason);
+            reportWrong(result.reason, result.errors);
             // 같은 단계·같은 모드는 유지하고 잘못 고른 메뉴와 옵션만 초기화한다.
             // resetRun()이 장바구니, 선택 옵션, 팝업, 타이머를 다시 설정한다.
             resetRun();
             render();
             return;
         }
+    }
+
+    // 오답노트에서 다시 연습해 성공한 경우 기존 카드를 완료 처리한다.
+    if (
+        state.retryNoteId &&
+        typeof markWrongNoteResolved === "function"
+    ) {
+        markWrongNoteResolved(state.retryNoteId);
+        state.retryNoteId = null;
     }
 
     // Step 3은 성공한 주문의 완료 시간만 기록한다.
@@ -309,7 +320,7 @@ function judgeStrict(mission, options) {
     const result = judgeOptions(mission, options);
 
     if (!result.pass) {
-        reportWrong(result.reason);
+        reportWrong(result.reason, result.errors);
     }
 
     return result.pass;
@@ -538,24 +549,71 @@ function judgePayment(mission, payId) {
     ]);
 }
 
-function reportWrong(reason) {
-    if (!isBaseStep()) return;
+function getShortWrongMessage(details) {
+    if (!Array.isArray(details) || details.length === 0) {
+        return "주문 내용을 다시 확인해 주세요";
+    }
+
+    const firstError = details[0];
+
+    const messages = {
+        menu: "메뉴를 다시 확인해 주세요",
+        temperature: "온도 옵션을 다시 확인해 주세요",
+        size: "크기 옵션을 다시 확인해 주세요",
+        quantity: "수량을 다시 확인해 주세요",
+        orderType: "매장·포장 옵션을 다시 확인해 주세요",
+        paymentMethod: "결제 방법을 다시 확인해 주세요"
+    };
+
+    return messages[firstError.mistakeType]
+        ?? "주문 내용을 다시 확인해 주세요";
+}
+
+function reportWrong(reason, details = []) {
+    if (!isBaseStep()) {
+        return;
+    }
+
     const isPractice = state.phase === "practice";
     const isStep3 = state.stepId === "step3";
 
-    // 모든 모드에서 무엇이 틀렸는지 즉시 알려 준다.
-    // 튜토리얼은 안내만 하고, 실습과 Step 3만 오답노트에 저장한다.
-    flash("❌ " + reason);
-    if ((isPractice || isStep3) && typeof saveWrongNote === "function") {
-        saveWrongNote({
+    // 튜토리얼은 기존 상세 안내를 보여 준다.
+    // 실습과 Step 3은 가장 먼저 틀린 항목 하나만 짧게 보여 준다.
+    const popupMessage = isPractice || isStep3
+        ? getShortWrongMessage(details)
+        : reason;
+
+    // reportWrong 호출 한 번당 팝업도 하나만 생성한다.
+    flash("❌ " + popupMessage);
+
+    // 화면에는 짧은 문구를 보여 주지만,
+    // 오답노트에는 전체 reason과 details를 그대로 저장한다.
+    if (
+        (isPractice || isStep3) &&
+        typeof saveWrongNote === "function"
+    ) {
+        const savedNote = saveWrongNote({
             stepId: state.stepId,
             stepTitle: MISSIONS[state.stepId].title,
             reason,
-            retryUrl: `/tutorial/?step=${encodeURIComponent(state.stepId)}`,
+            details,
+            retryNoteId: state.retryNoteId,
+            retryUrl: `/tutorial/?step=${encodeURIComponent(state.stepId)}`
         });
+
+        if (savedNote?.id) {
+            state.retryNoteId = savedNote.id;
+        }
     }
-    console.log("[오답]", state.stepId, reason);
+
+    console.log(
+        "[오답]",
+        state.stepId,
+        popupMessage,
+        details
+    );
 }
+
 function reportRecord(sec) {
     console.log("[기록]", state.stepId, sec + "초");
 }
@@ -663,7 +721,11 @@ function closeModals() {
 }
 //  big=true 면 화면 중앙에 큰 축하 메시지 (단계 완료 등)
 function flash(msg, big = false) {
+    // 기존 안내가 남아 있으면 제거해 팝업이 여러 개 겹치지 않게 한다.
+    document.querySelector(".kiosk-flash-message")?.remove();
+
     const t = document.createElement("div");
+    t.className = "kiosk-flash-message";
     t.textContent = msg;
     if (big) {
         t.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(17,17,17,0.9);color:#fff;padding:34px 56px;border-radius:20px;font-size:38px;font-weight:800;text-align:center;line-height:1.35;box-shadow:0 12px 40px rgba(0,0,0,.35);z-index:99;max-width:80vw";
@@ -716,9 +778,25 @@ document.getElementById("carNext").onclick = () => shiftCat(1);
 
 //  시작 
 // 홈에서 넘어온 ?step= 파라미터로 시작 단계 결정 (없으면 step1)
-const startParam = new URLSearchParams(location.search).get("step");
+const startQuery = new URLSearchParams(location.search);
+const startParam = startQuery.get("step");
+const retryParam = startQuery.get("retry");
+const modeParam = startQuery.get("mode");
 const VALID_STEPS = STEP_ORDER.concat(["coupon", "point"]); // 심화 단계 포함
+
 startStep(VALID_STEPS.includes(startParam) ? startParam : "step1");
+
+// 오답노트의 다시 연습은 튜토리얼을 건너뛰고 해당 단계 실습으로 진입한다.
+if (
+    retryParam &&
+    modeParam === "practice" &&
+    isBaseStep()
+) {
+    state.retryNoteId = retryParam;
+    state.phase = "practice";
+    resetRun();
+    render();
+}
 
 // 콘솔 테스트: startStep('step2') / wrap.dataset.mode='practice'
 window.startStep = startStep;
