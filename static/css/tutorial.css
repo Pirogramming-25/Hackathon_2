@@ -59,6 +59,12 @@ body {
     margin-bottom: 18px;
 }
 
+/* 나가기와 목표 카드를 키오스크에서 조금 더 떨어뜨린다. */
+.btn-exit,
+.mission-bar {
+    transform: translateX(-100px);
+}
+
 .mission-bar {
     display: flex;
     flex-direction: column;
@@ -67,6 +73,9 @@ body {
     border: 2px solid #d9a441;
     border-radius: 16px;
     padding: 16px;
+    /* 옵션창이 열려도 목표 카드는 회색 오버레이 위에 표시한다. */
+    position: relative;
+    z-index: 60;
 }
 
 .mission-badge {
