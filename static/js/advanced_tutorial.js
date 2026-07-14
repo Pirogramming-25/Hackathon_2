@@ -213,19 +213,119 @@ function optLabel(group, id) {
     return found ? found.label : id;
 }
 function judgeAdvanced() {
-    const m = MISSIONS[state.stepId];
-    const t = m.target;
-    const item = state.cart.find(c => c.menuId === m.correctMenu);
+  const mission = MISSIONS[state.stepId];
+  const target = mission.target;
 
-    const checks = [
-        { label: `${MENU_BY_ID[m.correctMenu].name} 담기`, ok: !!item },
-        { label: `수량 ${t.qty}개`, ok: !!item && item.qty === t.qty },
-    ];
-    if (t.useCoupon) checks.push({ label: "쿠폰 사용하기", ok: state.appliedCoupon === true });
-    if (t.usePoint) checks.push({ label: "포인트 적립하기", ok: !!state.pointPhone });
-    checks.push({ label: "결제 완료하기", ok: true });
+  const item = state.cart.find(
+    cartItem =>
+      cartItem.menuId === mission.correctMenu
+  );
 
-    return { pass: checks.every(c => c.ok), checks };
+  const selection = item
+    ? {
+        menuId: item.menuId,
+        temp: item.options?.temp,
+        size: item.options?.size,
+        qty: item.qty,
+        place: item.options?.place
+      }
+    : {
+        menuId: null,
+        temp: null,
+        size: null,
+        qty: 0,
+        place: null
+      };
+
+  const orderResult =
+    SlowKioskValidator.validateMission(
+      mission,
+      selection
+    );
+
+  const errors = [...orderResult.errors];
+
+  if (
+    target.useCoupon === true &&
+    state.appliedCoupon !== true
+  ) {
+    errors.push({
+      mistakeType: "couponApply",
+      reason: "쿠폰 사용을 놓쳤어요.",
+      selectedValue: state.appliedCoupon,
+      expectedValue: true,
+      retryAction: "apply-coupon"
+    });
+  }
+
+  if (
+    target.usePoint === true &&
+    !state.pointPhone
+  ) {
+    errors.push({
+      mistakeType: "pointApply",
+      reason: "포인트 적립을 놓쳤어요.",
+      selectedValue: false,
+      expectedValue: true,
+      retryAction: "apply-point"
+    });
+  }
+
+  function passed(mistakeType) {
+    return !errors.some(
+      error =>
+        error.mistakeType === mistakeType
+    );
+  }
+
+  const checks = [
+    {
+      label:
+        `${MENU_BY_ID[mission.correctMenu].name} 담기`,
+      ok: passed("menu")
+},
+    {
+      label:
+        `온도: ${optLabel("temp", target.temp)}`,
+      ok: passed("temperature")
+    },
+    {
+      label:
+        `크기: ${optLabel("size", target.size)}`,
+      ok: passed("size")
+    },
+    {
+      label: `수량 ${target.qty}개`,
+      ok: passed("quantity")
+    },
+    {
+      label:
+        `이용 방법: ${optLabel("place", target.place)}`,
+      ok: passed("orderType")
+    }
+  ];
+
+  if (target.useCoupon) {
+    checks.push({
+      label: "쿠폰 사용하기",
+      ok: passed("couponApply")
+    });
+  }
+
+  if (target.usePoint) {
+    checks.push({
+      label: "포인트 적립하기",
+      ok: passed("pointApply")
+    });
+}
+
+  checks.push({label: "결제 완료하기",ok: true});
+
+  return {
+    pass: errors.length === 0,
+    checks,
+    errors
+  };
 }
 
 //  ---- 결과 창 ----
@@ -297,10 +397,27 @@ function advancedPassStep() {
         return;
     }
     // practice(안내 없음) 단계: 결제하기(확정 행동) 시점의 실제 상태를 미션 target 과 비교해 판정
-    const { pass, checks } = judgeAdvanced();
-    recordAdvancedAction(pass ? "complete-practice" : "fail-practice", checks);
+    const {
+        pass,
+        checks,
+        errors
+    } = judgeAdvanced();
+
+    if (!pass) {
+        saveMissionErrors(
+            MISSIONS[state.stepId],
+            { errors }
+        );
+    }
+
+    recordAdvancedAction(
+        pass
+            ? "complete-practice"
+            : "fail-practice",
+        checks
+    );
+
     openResult(pass, checks);
 }
-
 //  초기 동기화 (이 스크립트는 tutorial.js 의 최초 startStep() 이후에 로드됨)
 renderAdvancedUI();
