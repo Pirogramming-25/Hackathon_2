@@ -80,7 +80,8 @@ function renderTabs() {
 
 //  메뉴 그리드 
 function renderGrid() {
-    const g = guideFor("menu");
+    // 아직 안 담았을 때만 메뉴 안내/하이라이트. 담으면 다음(결제) 안내로 넘어감.
+    const g = state.cart.length === 0 ? guideFor("menu") : null;
     const items = MENUS.filter(m => m.cats.includes(state.activeCat));
 
     let html = guideHTML(g);
@@ -141,13 +142,19 @@ function updateSummary() {
     cartCount.textContent = count;
     payTotal.textContent = total.toLocaleString();
 
-    const g = guideFor("cart");
+    // 음료를 담은 뒤에만 결제하기 안내를 띄운다 (담기 전엔 메뉴 안내가 우선)
+    const g = state.cart.length > 0 ? guideFor("cart") : null;
     btnPay.classList.toggle("hl", !!(g && g.highlight === "btnPay"));
 }
 
 //  담기 흐름
-//  온도가 옵션으로 빠졌으므로, 모든 메뉴는 옵션 팝업(온도·크기·수량·포장)을 거쳐 담는다.
+//  1단계(flow)는 클릭 흐름만 익히므로 옵션 팝업 없이 바로 담는다.
+//  2·3단계(및 심화)는 옵션 팝업(온도·크기·수량·포장)을 거쳐 담는다.
 function onSelectMenu(menuId) {
+    if (MISSIONS[state.stepId].judge === "flow") {
+        addToCart(menuId, 1, null);
+        return;
+    }
     openOptionModal(menuId);
 }
 
@@ -170,29 +177,36 @@ function openOptionModal(menuId) {
 }
 
 function renderOptionBody() {
-    const opts = MISSIONS[state.stepId].options;
+    const m = MISSIONS[state.stepId];
+    const opts = m.options;
     const sel = state.pendingOpt;
     const g = guideFor("option");
     const iceOnly = MENU_BY_ID[state.pendingMenu].iceOnly;
+    // 옵션 조합이 정확해야 하는 단계(step2=strict)의 튜토리얼에서만 정답 옵션 버튼에 가이드라인.
+    // 1단계(flow)·실습·실전에는 적용 안 함.
+    const t = (g && m.target && m.judge === "strict") ? m.target : null;
 
     let html = guideHTML(g);
     // 아이스 전용 메뉴는 온도 선택 버튼 대신 '차가운 메뉴' 안내만 표시
     if (iceOnly) {
         html += `<div class="opt-block"><div class="opt-label">온도</div><p class="opt-fixed">🧊 차가운 메뉴예요</p></div>`;
     } else {
-        html += optBlock("온도", opts.temp, sel.temp, "temp");
+        html += optBlock("온도", opts.temp, sel.temp, "temp", t && t.temp);
     }
-    html += optBlock("크기", opts.size, sel.size, "size");
+    html += optBlock("크기", opts.size, sel.size, "size", t && t.size);
+    // 수량: 목표보다 적으면 ＋, 많으면 − 에 가이드라인
+    const qtyHlPlus = (t && sel.qty < t.qty) ? " hl" : "";
+    const qtyHlMinus = (t && sel.qty > t.qty) ? " hl" : "";
     html += `
     <div class="opt-block">
       <div class="opt-label">수량</div>
       <div class="opt-qty">
-        <button class="qty-btn" data-d="-1">−</button>
+        <button class="qty-btn${qtyHlMinus}" data-d="-1">−</button>
         <span class="qty-num">${sel.qty}개</span>
-        <button class="qty-btn" data-d="1">＋</button>
+        <button class="qty-btn${qtyHlPlus}" data-d="1">＋</button>
       </div>
     </div>`;
-    html += optBlock("포장/매장", opts.place, sel.place, "place");
+    html += optBlock("포장/매장", opts.place, sel.place, "place", t && t.place);
     optionBody.innerHTML = html;
 
     optionBody.querySelectorAll(".opt-btn").forEach(el => {
@@ -206,11 +220,13 @@ function renderOptionBody() {
     });
 }
 
-function optBlock(label, opts, current, group) {
+function optBlock(label, opts, current, group, targetVal) {
     let h = `<div class="opt-block"><div class="opt-label">${label}</div><div class="opt-row">`;
     opts.forEach(op => {
         const on = current === op.id ? " on" : "";
-        h += `<button class="opt-btn${on}" data-group="${group}" data-val="${op.id}">${op.label}</button>`;
+        // 튜토리얼: 정답 버튼을 아직 안 골랐을 때만 가이드라인 (고르면 하이라이트 사라짐)
+        const hl = (targetVal && op.id === targetVal && current !== targetVal) ? " hl" : "";
+        h += `<button class="opt-btn${on}${hl}" data-group="${group}" data-val="${op.id}">${op.label}</button>`;
     });
     return h + `</div></div>`;
 }
