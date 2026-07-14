@@ -367,3 +367,8 @@ slowKioskFontSize
 7. 오답노트 화면 출력
 8. 글씨 크기 조절
 9. 최종 디자인 정리
+
+## localStorage 초기화
+개발자 도구 콘솔[F12]에서 아래를 실행
+localStorage.clear();
+location.reload();
