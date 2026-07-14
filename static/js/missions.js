@@ -77,11 +77,15 @@ const MISSIONS = {
 
     //  Step 3 : 실전 (미션 주어짐 · 가이드/하이라이트 없음)
     step3: {
-        title: "3단계: 카페라떼 핫 3잔 주문하고 결제하기",
+        title: "3단계: 서로 다른 메뉴 2개 주문하고 결제하기",
         judge: "real",
         timeLimit: 120,
         correctMenu: "latte",
         target: { temp: "hot", size: "large", qty: 3, place: "takeout" },
+        targets: [
+            { correctMenu: "latte", target: { temp: "hot", size: "large", qty: 3, place: "takeout" } },
+            { correctMenu: "americano", target: { temp: "ice", size: "small", qty: 1, place: "eatin" } },
+        ],
         options: OPTION_SET,
         guide: null,
     },
@@ -132,7 +136,7 @@ const MISSIONS = {
 //  랜덤 미션 생성기
 //  1단계 실습 / 2단계 실습 / 3단계 는 매번 랜덤 미션으로 진행한다.
 //  (1·2단계 튜토리얼은 위 MISSIONS 의 고정 미션 사용)
-//  반환: { title, correctMenu, target } — tutorial.js 가 MISSIONS[stepId] 에 덮어씀
+//  반환: { title, correctMenu, target } 또는 3단계용 { title, targets }
 // ============================================================
 function _pickRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
@@ -153,21 +157,44 @@ function makeRandomMission(stepId, phase) {
         };
     }
 
-    // 2·3단계: 온도·크기·수량·포장 모두 랜덤
-    const temp = menu.iceOnly ? "ice" : _pickRandom(OPTION_SET.temp).id;
-    const size = _pickRandom(OPTION_SET.size).id;
-    const qty = 1 + Math.floor(Math.random() * 3);   // 1~3잔
-    const place = _pickRandom(OPTION_SET.place).id;
+    function makeTarget(targetMenu) {
+        return {
+            correctMenu: targetMenu.id,
+            target: {
+                temp: targetMenu.iceOnly ? "ice" : _pickRandom(OPTION_SET.temp).id,
+                size: _pickRandom(OPTION_SET.size).id,
+                qty: 1 + Math.floor(Math.random() * 3),
+                place: _pickRandom(OPTION_SET.place).id,
+            },
+        };
+    }
+
+    // 3단계는 서로 다른 메뉴 2개를 한 번에 주문한다.
+    if (stepId === "step3") {
+        const secondMenu = _pickRandom(MENUS.filter(item => item.id !== menu.id));
+        const targets = [makeTarget(menu), makeTarget(secondMenu)];
+
+        return {
+            correctMenu: targets[0].correctMenu,
+            target: { ...targets[0].target },
+            targets,
+            title: `${stepNo}: 서로 다른 메뉴 2개 주문하고 결제하기`,
+        };
+    }
+
+    // 2단계: 온도·크기·수량·포장 모두 랜덤
+    const generated = makeTarget(menu);
+    const { temp, size, qty, place } = generated.target;
 
     const tempKo = menu.iceOnly ? "" : (temp === "hot" ? "따뜻한 " : "아이스 ");
     const sizeKo = size === "large" ? "크게" : "보통";
     const placeKo = place === "takeout" ? "포장" : "매장";
     const body = `${tempKo}${menu.name} · ${sizeKo} · ${qty}잔 · ${placeKo}`;
-    const tail = stepId === "step3" ? " 주문하고 결제하기" : "";
 
     return {
         correctMenu: menu.id,
         target: { temp, size, qty, place },
-        title: `${stepNo}${phaseTag}: ${body}${tail}`,
+        targets: null,
+        title: `${stepNo}${phaseTag}: ${body}`,
     };
 }
