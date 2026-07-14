@@ -270,58 +270,282 @@ payModal.querySelectorAll(".pay-method").forEach(el => {
 });
 
 function onPay(payId) {
-    const m = MISSIONS[state.stepId];
-    if (isBaseStep() && !ensureTimeRemaining()) return;
-    if (m.judge === "real") {
-        const sec = (m.timeLimit || 120) - state.timeLeft;
+    const mission = MISSIONS[state.stepId];
+
+    // Step 1·2·3은 결제라는 확정 행동에서 최종 상태를 판별한다.
+    if (isBaseStep()) {
+        const result = combineJudgeResults(
+            judgeCart(mission),
+            judgePayment(mission, payId)
+        );
+
+        if (!result.pass) {
+            reportWrong(result.reason);
+            // 같은 단계·같은 모드는 유지하고 잘못 고른 메뉴와 옵션만 초기화한다.
+            // resetRun()이 장바구니, 선택 옵션, 팝업, 타이머를 다시 설정한다.
+            resetRun();
+            render();
+            return;
+        }
+    }
+
+    // Step 3은 성공한 주문의 완료 시간만 기록한다.
+    if (mission.judge === "real") {
+        const sec = (mission.timeLimit || 120) - state.timeLeft;
         reportRecord(sec);
     }
 
-    // 실습과 3단계는 오답을 기록하되, 사용자의 결제 흐름은 막지 않는다.
-    if (state.phase === "practice" || m.judge === "real") {
-        const result = judgeCart(m);
-        if (!result.pass) reportWrong(result.reason);
-    }
     closeModals();
     passStep();
 }
 
-function judgeStrict(m, o) {
-    // 실습 단계에서는 자유롭게 조합해 보고 결제까지 진행할 수 있다.
-    if (m.judge !== "strict" || state.phase !== "tutorial") return true;
-    const result = judgeOptions(m, o);
-    if (!result.pass) reportWrong(result.reason);
+// Step 2 튜토리얼은 틀린 옵션 상태로 담지 못하게 한다.
+// 실습과 Step 3은 자유롭게 고른 뒤 결제 시점에 최종 판별한다.
+function judgeStrict(mission, options) {
+    if (mission.judge !== "strict" || state.phase !== "tutorial") {
+        return true;
+    }
+
+    const result = judgeOptions(mission, options);
+
+    if (!result.pass) {
+        reportWrong(result.reason);
+    }
+
     return result.pass;
 }
 
-function judgeOptions(m, options) {
-    const labels = { temp: "온도", size: "크기", qty: "수량", place: "포장/매장" };
-    for (const key of ["temp", "size", "qty", "place"]) {
-        if (options[key] !== m.target[key]) {
-            return { pass: false, reason: `${labels[key]} 옵션을 다시 확인해 주세요` };
-        }
+function getOptionLabel(mission, key, value) {
+    if (value === undefined || value === null || value === "") {
+        return "선택하지 않음";
     }
-    return { pass: true };
+
+    if (key === "qty") {
+        return `${value}잔`;
+    }
+
+    const option = mission.options?.[key]?.find(
+        item => String(item.id) === String(value)
+    );
+
+    if (option) {
+        return option.label;
+    }
+
+    const fallbackLabels = {
+        card: "카드 결제",
+        cash: "현금 결제",
+        mobile: "간편결제"
+    };
+
+    return fallbackLabels[value] ?? String(value);
 }
 
-function judgeCart(m) {
-    if (state.cart.length !== 1 || state.cart[0].menuId !== m.correctMenu) {
-        return { pass: false, reason: `‘${MENU_BY_ID[m.correctMenu].name}’만 담아 주세요` };
-    }
-    if (m.judge === "flow") {
-        return state.cart[0].qty === m.target.qty
-            ? { pass: true }
-            : { pass: false, reason: `수량을 ${m.target.qty}개로 선택해 주세요` };
-    }
-    return judgeOptions(m, state.cart[0].options || {});
+function createJudgeError({
+    section,
+    mistakeType,
+    label,
+    selectedValue,
+    expectedValue,
+    selectedLabel,
+    expectedLabel
+}) {
+    const reason = selectedValue === undefined ||
+        selectedValue === null ||
+        selectedValue === ""
+        ? `${label}을 선택하지 않았어요. ${expectedLabel} 선택이 필요해요.`
+        : `${selectedLabel}을 선택했어요. 미션 조건은 ${expectedLabel}입니다.`;
+
+    return {
+        section,
+        mistakeType,
+        label,
+        selectedValue,
+        expectedValue,
+        reason
+    };
 }
+
+function createJudgeResult(errors) {
+    return {
+        pass: errors.length === 0,
+        errors,
+        reason: errors
+            .map(error =>
+                `${error.section}(${error.label}): ${error.reason}`
+            )
+            .join(" / ")
+    };
+}
+
+function combineJudgeResults(...results) {
+    const errors = results.flatMap(result => result?.errors ?? []);
+    return createJudgeResult(errors);
+}
+
+function judgeOptions(mission, options = {}) {
+    const errors = [];
+
+    const fields = [
+        {
+            key: "temp",
+            label: "온도",
+            mistakeType: "temperature"
+        },
+        {
+            key: "size",
+            label: "크기",
+            mistakeType: "size"
+        },
+        {
+            key: "qty",
+            label: "수량",
+            mistakeType: "quantity"
+        },
+        {
+            key: "place",
+            label: "매장·포장",
+            mistakeType: "orderType"
+        }
+    ];
+
+    fields.forEach(field => {
+        const selectedValue = field.key === "qty"
+            ? Number(options[field.key])
+            : options[field.key];
+
+        const expectedValue = field.key === "qty"
+            ? Number(mission.target?.[field.key])
+            : mission.target?.[field.key];
+
+        // 해당 미션에 없는 조건은 판별하지 않는다.
+        if (mission.target?.[field.key] === undefined) {
+            return;
+        }
+
+        if (selectedValue === expectedValue) {
+            return;
+        }
+
+        errors.push(
+            createJudgeError({
+                section: "옵션 선택",
+                mistakeType: field.mistakeType,
+                label: field.label,
+                selectedValue,
+                expectedValue,
+                selectedLabel:
+                    getOptionLabel(mission, field.key, selectedValue),
+                expectedLabel:
+                    getOptionLabel(mission, field.key, expectedValue)
+            })
+        );
+    });
+
+    return createJudgeResult(errors);
+}
+
+function judgeCart(mission) {
+    const errors = [];
+
+    if (state.cart.length !== 1) {
+        errors.push({
+            section: "메뉴 선택",
+            mistakeType: "menu",
+            label: "메뉴",
+            selectedValue: state.cart.map(item => item.menuId),
+            expectedValue: mission.correctMenu,
+            reason: `장바구니에는 ‘${MENU_BY_ID[mission.correctMenu].name}’ 메뉴만 담아 주세요.`
+        });
+
+        return createJudgeResult(errors);
+    }
+
+    const cartItem = state.cart[0];
+
+    if (cartItem.menuId !== mission.correctMenu) {
+        errors.push({
+            section: "메뉴 선택",
+            mistakeType: "menu",
+            label: "메뉴",
+            selectedValue: cartItem.menuId,
+            expectedValue: mission.correctMenu,
+            reason:
+                `‘${MENU_BY_ID[cartItem.menuId]?.name ?? "다른 메뉴"}’를 담았어요. ` +
+                `미션 메뉴는 ‘${MENU_BY_ID[mission.correctMenu].name}’입니다.`
+        });
+    }
+
+    if (mission.judge === "flow") {
+        const selectedQuantity = Number(cartItem.qty);
+        const expectedQuantity = Number(mission.target?.qty ?? 1);
+
+        if (selectedQuantity !== expectedQuantity) {
+            errors.push(
+                createJudgeError({
+                    section: "옵션 선택",
+                    mistakeType: "quantity",
+                    label: "수량",
+                    selectedValue: selectedQuantity,
+                    expectedValue: expectedQuantity,
+                    selectedLabel: `${selectedQuantity}잔`,
+                    expectedLabel: `${expectedQuantity}잔`
+                })
+            );
+        }
+
+        return createJudgeResult(errors);
+    }
+
+    const finalOptions = {
+        ...(cartItem.options ?? {}),
+        // 장바구니에서 수량을 바꾼 경우 최종 수량으로 판별한다.
+        qty: cartItem.qty
+    };
+
+    return combineJudgeResults(
+        createJudgeResult(errors),
+        judgeOptions(mission, finalOptions)
+    );
+}
+
+function judgePayment(mission, payId) {
+    const expectedPayment =
+        mission.target?.payMethod ??
+        mission.target?.payment;
+
+    // 결제수단 정답이 정의되지 않은 미션은 결제 방법을 판별하지 않는다.
+    if (expectedPayment === undefined) {
+        return createJudgeResult([]);
+    }
+
+    if (payId === expectedPayment) {
+        return createJudgeResult([]);
+    }
+
+    return createJudgeResult([
+        createJudgeError({
+            section: "결제 선택",
+            mistakeType: "paymentMethod",
+            label: "결제 방법",
+            selectedValue: payId,
+            expectedValue: expectedPayment,
+            selectedLabel:
+                getOptionLabel(mission, "payment", payId),
+            expectedLabel:
+                getOptionLabel(mission, "payment", expectedPayment)
+        })
+    ]);
+}
+
 function reportWrong(reason) {
     if (!isBaseStep()) return;
     const isPractice = state.phase === "practice";
     const isStep3 = state.stepId === "step3";
 
-    // 튜토리얼은 즉시 안내만, 실습과 3단계는 오답노트에만 남긴다.
-    if (!isPractice && !isStep3) flash("❌ " + reason);
+    // 모든 모드에서 무엇이 틀렸는지 즉시 알려 준다.
+    // 튜토리얼은 안내만 하고, 실습과 Step 3만 오답노트에 저장한다.
+    flash("❌ " + reason);
     if ((isPractice || isStep3) && typeof saveWrongNote === "function") {
         saveWrongNote({
             stepId: state.stepId,
@@ -389,23 +613,20 @@ function showDoneScreen() {
 function startTimer(sec) {
     state.timeLeft = sec;
     state.timeExpired = false;
-    const runVersion = ++state.runVersion;
+    ++state.runVersion;
     timerNum.textContent = sec;
+
     clearInterval(state.timerId);
+
     state.timerId = setInterval(() => {
         state.timeLeft = Math.max(0, state.timeLeft - 1);
         timerNum.textContent = state.timeLeft;
+
+        // 시간이 0이 되면 표시만 멈춘다.
+        // 실패·오답 처리하거나 연습을 초기화하지 않는다.
         if (state.timeLeft === 0) {
-            clearInterval(state.timerId);
-            if (!isBaseStep()) return;
             state.timeExpired = true;
-            closeModals();
-            reportWrong("제한 시간이 지났어요. 처음부터 다시 시도해 주세요");
-            setTimeout(() => {
-                if (state.runVersion !== runVersion || !state.timeExpired) return;
-                resetRun();
-                render();
-            }, 1800);
+            clearInterval(state.timerId);
         }
     }, 1000);
 }
@@ -415,12 +636,8 @@ function isBaseStep() {
 }
 
 function ensureTimeRemaining() {
-    if (!state.timeExpired && state.timeLeft > 0) return true;
-    if (!state.timeExpired) {
-        state.timeExpired = true;
-        reportWrong("제한 시간이 지났어요. 처음부터 다시 시도해 주세요");
-    }
-    return false;
+    // 제한시간이 끝나도 연습은 계속할 수 있다.
+    return true;
 }
 
 //  튜토리얼/실습 안내 헬퍼
