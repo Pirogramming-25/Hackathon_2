@@ -41,8 +41,41 @@ const payModal = document.getElementById("payModal");
 const MENU_BY_ID = Object.fromEntries(MENUS.map(m => [m.id, m]));
 const STEP_ORDER = ["step1", "step2", "step3"];
 
+//  각 단계의 고정 미션 원본 스냅샷 (튜토리얼로 되돌릴 때 복원용)
+const FIXED_MISSION = {};
+STEP_ORDER.forEach(s => {
+    FIXED_MISSION[s] = {
+        title: MISSIONS[s].title,
+        correctMenu: MISSIONS[s].correctMenu,
+        target: Object.assign({}, MISSIONS[s].target),
+    };
+});
+
+//  랜덤 미션 단계인지: 1·2단계 실습, 3단계
+function isRandomMissionStep(stepId, phase) {
+    if (stepId === "step3") return true;
+    if ((stepId === "step1" || stepId === "step2") && phase === "practice") return true;
+    return false;
+}
+
+//  현재 단계·phase 에 맞는 미션을 MISSIONS[stepId] 에 반영(고정 복원/랜덤 생성) + 미션 문구 갱신
+//  ※ 판정(judgeCart/judgeOptions 등)이 MISSIONS[stepId].target/correctMenu 를 읽으므로 여기서 덮어씀
+function applyMission() {
+    const stepId = state.stepId;
+    if (isRandomMissionStep(stepId, state.phase) && typeof makeRandomMission === "function") {
+        Object.assign(MISSIONS[stepId], makeRandomMission(stepId, state.phase));
+    } else if (FIXED_MISSION[stepId]) {
+        Object.assign(MISSIONS[stepId], {
+            title: FIXED_MISSION[stepId].title,
+            correctMenu: FIXED_MISSION[stepId].correctMenu,
+            target: Object.assign({}, FIXED_MISSION[stepId].target),
+        });
+    }
+    missionText.textContent = MISSIONS[stepId].title;
+}
+
 //  진입점
-function startStep(stepId) {
+function startStep(stepId, phase = "tutorial") {
     state.stepId = stepId;
     state.activeCat = "reco";
     state.cart = [];
@@ -51,10 +84,10 @@ function startStep(stepId) {
     state.appliedCoupon = null;
     state.pointPhone = null;
     state.retryNoteId = null;
-    state.phase = "tutorial";
+    state.phase = phase;
     state.advStage = "shopping";
     state.timeExpired = false;
-    missionText.textContent = MISSIONS[stepId].title;
+    applyMission();   // 미션 데이터(MISSIONS[stepId]) 확정 + 미션 문구 표시
     closeModals();
     startTimer(MISSIONS[stepId].timeLimit || 120);
     render();
@@ -626,7 +659,8 @@ function resetRun() {
     state.timeExpired = false;
     closeModals();
     startTimer(MISSIONS[state.stepId].timeLimit || 120);
-    missionText.textContent = MISSIONS[state.stepId].title + (state.phase === "practice" ? " (실습)" : "");
+    // 미션 문구는 현재 MISSIONS[stepId].title (applyMission 이 이미 단계/실습 라벨을 포함해 둠)
+    missionText.textContent = MISSIONS[state.stepId].title;
 }
 
 function passStep() {
@@ -647,6 +681,7 @@ function passStep() {
         if (typeof setStepProgress === "function") setStepProgress(state.stepId, 50); // 튜토리얼 완료 = 50%
         flash("잘하셨어요! 이번엔 안내 없이 직접 해볼까요?", true);
         state.phase = "practice";
+        applyMission();   // 실습용 랜덤 미션 생성 + 문구 갱신
         resetRun();
         render();
         return;
@@ -802,19 +837,18 @@ const retryParam = startQuery.get("retry");
 const modeParam = startQuery.get("mode");
 const VALID_STEPS = STEP_ORDER.concat(["coupon", "point"]); // 심화 단계 포함
 
-startStep(VALID_STEPS.includes(startParam) ? startParam : "step1");
+const startStepId = VALID_STEPS.includes(startParam) ? startParam : "step1";
+const isBase = STEP_ORDER.includes(startStepId);
 
-// 오답노트의 다시 연습은 튜토리얼을 건너뛰고 해당 단계 실습으로 진입한다.
-if (
-    retryParam &&
-    modeParam === "practice" &&
-    isBaseStep()
-) {
-    state.retryNoteId = retryParam;
-    state.phase = "practice";
-    resetRun();
-    render();
-}
+// 진행률 50(튜토리얼만 완료)인 1·2단계는 실습부터 시작
+const halfDone = isBase && startStepId !== "step3"
+    && typeof getProgressAll === "function"
+    && (getProgressAll()[startStepId] || 0) === 50;
+// 오답노트 다시 연습(mode=practice)도 튜토리얼을 건너뛰고 실습으로 진입
+const retryPractice = !!(retryParam && modeParam === "practice" && isBase);
+
+startStep(startStepId, (halfDone || retryPractice) ? "practice" : "tutorial");
+if (retryPractice) state.retryNoteId = retryParam;
 
 // 콘솔 테스트: startStep('step2') / wrap.dataset.mode='practice'
 window.startStep = startStep;

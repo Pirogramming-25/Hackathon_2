@@ -127,3 +127,47 @@ const MISSIONS = {
     },
 
 };
+
+// ============================================================
+//  랜덤 미션 생성기
+//  1단계 실습 / 2단계 실습 / 3단계 는 매번 랜덤 미션으로 진행한다.
+//  (1·2단계 튜토리얼은 위 MISSIONS 의 고정 미션 사용)
+//  반환: { title, correctMenu, target } — tutorial.js 가 MISSIONS[stepId] 에 덮어씀
+// ============================================================
+function _pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function makeRandomMission(stepId, phase) {
+    const menu = _pickRandom(MENUS);
+    const base = MISSIONS[stepId];
+    const stepNo = { step1: "1단계", step2: "2단계", step3: "3단계" }[stepId] || "";
+    const phaseTag = phase === "practice" ? " 실습" : "";
+
+    // 1단계(flow): 옵션 없이 메뉴만 (수량 1잔 고정)
+    if (base.judge === "flow") {
+        return {
+            correctMenu: menu.id,
+            target: { qty: 1 },
+            title: `${stepNo}${phaseTag}: ${menu.name} 담기`,
+        };
+    }
+
+    // 2·3단계: 온도·크기·수량·포장 모두 랜덤
+    const temp = menu.iceOnly ? "ice" : _pickRandom(OPTION_SET.temp).id;
+    const size = _pickRandom(OPTION_SET.size).id;
+    const qty = 1 + Math.floor(Math.random() * 3);   // 1~3잔
+    const place = _pickRandom(OPTION_SET.place).id;
+
+    const tempKo = menu.iceOnly ? "" : (temp === "hot" ? "따뜻한 " : "아이스 ");
+    const sizeKo = size === "large" ? "크게" : "보통";
+    const placeKo = place === "takeout" ? "포장" : "매장";
+    const body = `${tempKo}${menu.name} · ${sizeKo} · ${qty}잔 · ${placeKo}`;
+    const tail = stepId === "step3" ? " 주문하고 결제하기" : "";
+
+    return {
+        correctMenu: menu.id,
+        target: { temp, size, qty, place },
+        title: `${stepNo}${phaseTag}: ${body}${tail}`,
+    };
+}
