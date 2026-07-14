@@ -259,8 +259,8 @@ function updateSummary() {
 function onSelectMenu(menuId) {
     if (isBaseStep() && !ensureTimeRemaining()) return;
     const m = MISSIONS[state.stepId];
-    // 기본/옵션 단계는 메뉴를 누르는 순간 오답을 알려 준다.
-    if (state.phase === "tutorial" && (m.judge === "flow" || m.judge === "strict") && menuId !== m.correctMenu) {
+    // 튜토리얼에서는 기본·심화 모두 정답 메뉴가 아닌 버튼을 누르면 진행을 막는다.
+    if (state.phase === "tutorial" && m.guide && menuId !== m.correctMenu) {
         reportWrong(
             `‘${MENU_BY_ID[m.correctMenu].name}’ 메뉴를 선택해 주세요`,
             [{ mistakeType: "menu" }]
@@ -298,9 +298,9 @@ function renderOptionBody() {
     const sel = state.pendingOpt;
     const g = guideFor("option");
     const iceOnly = MENU_BY_ID[state.pendingMenu].iceOnly;
-    // 옵션 조합이 정확해야 하는 단계(step2=strict)의 튜토리얼에서만 정답 옵션 버튼에 가이드라인.
-    // 1단계(flow)·실습·실전에는 적용 안 함.
-    const t = (g && m.target && m.judge === "strict") ? m.target : null;
+    // 옵션 조합을 연습하는 기본 2단계와 심화 튜토리얼에 정답 가이드라인을 표시한다.
+    const needsOptionGuide = m.judge === "strict" || m.judge === "coupon" || m.judge === "point";
+    const t = (g && m.target && needsOptionGuide) ? m.target : null;
 
     let html = guideHTML(g);
     // 아이스 전용 메뉴는 온도 선택 버튼 대신 '차가운 메뉴' 안내만 표시
@@ -326,11 +326,53 @@ function renderOptionBody() {
     optionBody.innerHTML = html;
 
     optionBody.querySelectorAll(".opt-btn").forEach(el => {
-        el.onclick = () => { state.pendingOpt[el.dataset.group] = el.dataset.val; renderOptionBody(); };
+        el.onclick = () => {
+            const group = el.dataset.group;
+            const value = el.dataset.val;
+
+            // 튜토리얼에서는 가이드라인이 아닌 오답 옵션을 선택하지 못하게 한다.
+            if (t && t[group] !== undefined && value !== t[group]) {
+                const mistakeTypes = {
+                    temp: "temperature",
+                    size: "size",
+                    place: "orderType"
+                };
+                reportWrong(
+                    `${getOptionLabel(m, group, t[group])} 옵션을 선택해 주세요.`,
+                    [{ mistakeType: mistakeTypes[group] }]
+                );
+                return;
+            }
+
+            state.pendingOpt[group] = value;
+            renderOptionBody();
+        };
     });
     optionBody.querySelectorAll(".qty-btn").forEach(el => {
         el.onclick = () => {
-            state.pendingOpt.qty = Math.max(1, state.pendingOpt.qty + Number(el.dataset.d));
+            const direction = Number(el.dataset.d);
+            const nextQuantity = Math.max(1, state.pendingOpt.qty + direction);
+            const movesTowardTarget = !t ||
+                (state.pendingOpt.qty < t.qty && direction > 0) ||
+                (state.pendingOpt.qty > t.qty && direction < 0);
+
+            if (t && state.pendingOpt.qty !== t.qty && !movesTowardTarget) {
+                reportWrong(
+                    `수량을 ${t.qty}개로 맞춰 주세요.`,
+                    [{ mistakeType: "quantity" }]
+                );
+                return;
+            }
+
+            if (t && state.pendingOpt.qty === t.qty) {
+                reportWrong(
+                    `미션 수량은 ${t.qty}개예요.`,
+                    [{ mistakeType: "quantity" }]
+                );
+                return;
+            }
+
+            state.pendingOpt.qty = nextQuantity;
             renderOptionBody();
         };
     });
@@ -416,10 +458,15 @@ function onPay(payId) {
     passStep();
 }
 
-// Step 2 튜토리얼은 틀린 옵션 상태로 담지 못하게 한다.
+// Step 2와 심화 튜토리얼은 틀린 옵션 상태로 담지 못하게 한다.
 // 실습과 Step 3은 자유롭게 고른 뒤 결제 시점에 최종 판별한다.
 function judgeStrict(mission, options) {
-    if (mission.judge !== "strict" || state.phase !== "tutorial") {
+    const needsTutorialValidation =
+        mission.judge === "strict" ||
+        mission.judge === "coupon" ||
+        mission.judge === "point";
+
+    if (!needsTutorialValidation || state.phase !== "tutorial") {
         return true;
     }
 
@@ -670,7 +717,8 @@ function getShortWrongMessage(details) {
         orderType: "매장·포장 옵션을 다시 확인해 주세요",
         paymentMethod: "결제 방법을 다시 확인해 주세요",
         coupon: "쿠폰 사용 여부를 다시 확인해 주세요",
-        point: "포인트 적립 여부를 다시 확인해 주세요"
+        point: "포인트 적립 여부를 다시 확인해 주세요",
+        payConfirm: "결제 진행 여부를 다시 확인해 주세요"
     };
 
     return messages[firstError.mistakeType]
@@ -678,10 +726,6 @@ function getShortWrongMessage(details) {
 }
 
 function reportWrong(reason, details = []) {
-    if (!isBaseStep()) {
-        return;
-    }
-
     const isPractice = state.phase === "practice";
     const isStep3 = state.stepId === "step3";
 
