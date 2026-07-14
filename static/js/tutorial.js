@@ -304,7 +304,7 @@ function passStep() {
     if (hasGuide && state.phase === "tutorial") {
         console.log("[통과]", state.stepId, "tutorial→practice");
         if (typeof setStepProgress === "function") setStepProgress(state.stepId, 50); // 튜토리얼 완료 = 50%
-        flash("잘하셨어요! 이번엔 안내 없이 직접 해볼까요?");
+        flash("잘하셨어요! 이번엔 안내 없이 직접 해볼까요?", true);
         state.phase = "practice";
         resetRun();
         render();
@@ -313,7 +313,7 @@ function passStep() {
 
     // 실습까지 통과했거나 3단계(가이드 없음) → 다음 단계로, 마지막이면 완료 화면
     if (typeof setStepProgress === "function") setStepProgress(state.stepId, 100); // 실습/실전 완료 = 100%
-    flash("잘하셨어요!");
+    flash("잘하셨어요!", true);
     console.log("[통과]", state.stepId, state.phase);
     const idx = STEP_ORDER.indexOf(state.stepId);
     if (idx < STEP_ORDER.length - 1) setTimeout(() => startStep(STEP_ORDER[idx + 1]), 1300);
@@ -360,14 +360,18 @@ function closeModals() {
     // 심화 단계(쿠폰/포인트) 팝업들 — advanced_tutorial.js 가 로드된 경우에만 실행
     if (typeof closeAdvancedModals === "function") closeAdvancedModals();
 }
-function flash(msg) {
+//  big=true 면 화면 중앙에 큰 축하 메시지 (단계 완료 등)
+function flash(msg, big = false) {
     const t = document.createElement("div");
     t.textContent = msg;
-    t.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:14px 24px;border-radius:12px;font-size:18px;font-weight:700;z-index:99";
+    if (big) {
+        t.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(17,17,17,0.9);color:#fff;padding:34px 56px;border-radius:20px;font-size:38px;font-weight:800;text-align:center;line-height:1.35;box-shadow:0 12px 40px rgba(0,0,0,.35);z-index:99;max-width:80vw";
+    } else {
+        t.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(17,17,17,0.9);color:#fff;padding:34px 56px;border-radius:20px;font-size:38px;font-weight:800;text-align:center;line-height:1.35;box-shadow:0 12px 40px rgba(0,0,0,.35);z-index:99;max-width:80vw";
+    }
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 1400);
+    setTimeout(() => t.remove(), big ? 2000 : 1700);
 }
-
 document.getElementById("optionClose").onclick = closeModals;
 document.getElementById("payClose").onclick = closeModals;
 [optionModal, payModal].forEach(m => {
