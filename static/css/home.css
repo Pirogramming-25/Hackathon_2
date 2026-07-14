@@ -327,6 +327,7 @@ body.font-xlarge {
   background: #ffe9b3;
   color: #7a3f00;
   box-shadow: 0 7px 14px rgba(17, 24, 39, 0.12);
+  text-decoration: none;
 }
 
 .free-practice-card span {
