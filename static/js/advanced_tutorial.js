@@ -215,17 +215,122 @@ function optLabel(group, id) {
 function judgeAdvanced() {
     const m = MISSIONS[state.stepId];
     const t = m.target;
-    const item = state.cart.find(c => c.menuId === m.correctMenu);
+    const expectedMenu = MENU_BY_ID[m.correctMenu];
+    const item = state.cart.length === 1 ? state.cart[0] : null;
+    const isCorrectMenu = !!item && item.menuId === m.correctMenu;
+    const selectedOptions = isCorrectMenu ? (item.options || {}) : {};
+    const checks = [];
 
-    const checks = [
-        { label: `${MENU_BY_ID[m.correctMenu].name} 담기`, ok: !!item },
-        { label: `수량 ${t.qty}개`, ok: !!item && item.qty === t.qty },
+    checks.push({
+        label: `${expectedMenu.name}만 담기`,
+        ok: state.cart.length === 1 && isCorrectMenu,
+        mistakeType: "menu",
+        errorLabel: "메뉴",
+        reason: state.cart.length > 1
+            ? `장바구니에는 ‘${expectedMenu.name}’ 메뉴만 담아 주세요.`
+            : `‘${expectedMenu.name}’ 메뉴를 담아 주세요.`
+    });
+
+    const optionChecks = [
+        {
+            key: "temp",
+            label: "온도",
+            mistakeType: "temperature",
+            expectedLabel: optLabel("temp", t.temp)
+        },
+        {
+            key: "size",
+            label: "크기",
+            mistakeType: "size",
+            expectedLabel: optLabel("size", t.size)
+        },
+        {
+            key: "place",
+            label: "매장·포장",
+            mistakeType: "orderType",
+            expectedLabel: optLabel("place", t.place)
+        }
     ];
-    if (t.useCoupon) checks.push({ label: "쿠폰 사용하기", ok: state.appliedCoupon === true });
-    if (t.usePoint) checks.push({ label: "포인트 적립하기", ok: !!state.pointPhone });
+
+    optionChecks.forEach(option => {
+        if (t[option.key] === undefined) return;
+
+        const selectedValue = selectedOptions[option.key];
+        const selectedLabel = selectedValue
+            ? optLabel(option.key, selectedValue)
+            : "선택하지 않음";
+
+        checks.push({
+            label: `${option.label} ${option.expectedLabel}`,
+            ok: isCorrectMenu && selectedValue === t[option.key],
+            mistakeType: option.mistakeType,
+            errorLabel: option.label,
+            reason: `${option.label}에서 ‘${selectedLabel}’을 선택했어요. 미션 조건은 ‘${option.expectedLabel}’입니다.`
+        });
+    });
+
+    checks.push({
+        label: `수량 ${t.qty}개`,
+        ok: isCorrectMenu && Number(item.qty) === Number(t.qty),
+        mistakeType: "quantity",
+        errorLabel: "수량",
+        reason: `수량을 ${t.qty}개로 선택해 주세요.`
+    });
+    if (t.useCoupon) {
+        checks.push({
+            label: "쿠폰 사용하기",
+            ok: state.appliedCoupon === true,
+            mistakeType: "coupon",
+            errorLabel: "쿠폰 사용",
+            reason: "쿠폰을 사용하지 않았어요. 쿠폰을 적용한 뒤 결제해 주세요."
+        });
+    }
+    if (t.usePoint) {
+        checks.push({
+            label: "포인트 적립하기",
+            ok: !!state.pointPhone,
+            mistakeType: "point",
+            errorLabel: "포인트 적립",
+            reason: "포인트를 적립하지 않았어요. 전화번호를 입력해 주세요."
+        });
+    }
     checks.push({ label: "결제 완료하기", ok: true });
 
-    return { pass: checks.every(c => c.ok), checks };
+    const errors = checks
+        .filter(check => !check.ok)
+        .map(check => ({
+            section: state.stepId === "coupon" ? "쿠폰 사용" : "포인트 적립",
+            mistakeType: check.mistakeType,
+            label: check.errorLabel,
+            reason: check.reason
+        }));
+
+    return {
+        pass: checks.every(check => check.ok),
+        checks,
+        errors
+    };
+}
+
+// 심화 실습의 오답을 기본 단계와 같은 저장소에 기록한다.
+// 일반 실습에서는 새 오답을 만들고, 오답노트 재연습 중이면 기존 카드를 갱신한다.
+function saveAdvancedWrongNote(errors) {
+    if (
+        !Array.isArray(errors) ||
+        errors.length === 0 ||
+        typeof saveWrongNote !== "function"
+    ) {
+        return;
+    }
+
+    saveWrongNote({
+        stepId: state.stepId,
+        stepTitle: MISSIONS[state.stepId].title,
+        reason: errors.map(error => error.reason).join(" / "),
+        details: errors,
+        retryNoteId: state.retryNoteId,
+        retryUrl: `/tutorial/?step=${encodeURIComponent(state.stepId)}`
+    });
 }
 
 //  ---- 결과 창 ----
@@ -303,6 +408,27 @@ function advancedSkip() {
 
 //  실제 결제(onPay)까지 완료했을 때 호출됨 — tutorial.js의 passStep()에서 훅으로 실행
 function advancedPassStep() {
+    // tutorial과 practice 모두 결제 완료 시점의 실제 상태를 미션 target과 비교한다.
+    const { pass, checks, errors } = judgeAdvanced();
+
+    if (!pass) {
+        // 오답노트는 안내가 없는 실습에서 틀린 경우에만 기록한다.
+        if (state.phase === "practice") {
+            saveAdvancedWrongNote(errors);
+        }
+
+        // 기본 단계와 동일하게 첫 번째 핵심 오답만 검은 안내창으로 보여 준다.
+        const popupMessage = typeof getShortWrongMessage === "function"
+            ? getShortWrongMessage(errors)
+            : "주문 내용을 다시 확인해 주세요";
+
+        recordAdvancedAction(`fail-${state.phase}`, checks);
+        resetAdvancedRun();
+        render();
+        flash("❌ " + popupMessage);
+        return;
+    }
+
     if (state.phase === "tutorial") {
         recordAdvancedAction("complete-tutorial", "tutorial->practice");
         state.phase = "practice";
@@ -311,10 +437,18 @@ function advancedPassStep() {
         render();
         return;
     }
-    // practice(안내 없음) 단계: 결제하기(확정 행동) 시점의 실제 상태를 미션 target 과 비교해 판정
-    const { pass, checks } = judgeAdvanced();
-    recordAdvancedAction(pass ? "complete-practice" : "fail-practice", checks);
-    openResult(pass, checks);
+
+    if (
+        state.retryNoteId &&
+        typeof markWrongNoteResolved === "function"
+    ) {
+        // 오답노트의 '다시 연습'으로 들어온 경우에만 완료 처리한다.
+        markWrongNoteResolved(state.retryNoteId);
+        state.retryNoteId = null;
+    }
+
+    recordAdvancedAction("complete-practice", checks);
+    openResult(true, checks);
 }
 
 //  초기 동기화 (이 스크립트는 tutorial.js 의 최초 startStep() 이후에 로드됨)
