@@ -1,36 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Slow Kiosk - 튜토리얼</title>
-  <link rel="stylesheet" href="{% static 'css/tutorial.css' %}">
+  <title>자유 연습</title>
+  <link rel="stylesheet" href="{% static 'css/practice_free.css' %}">
 </head>
-
 <body>
-
-  <!-- ============================================
-     레이아웃: 왼쪽(나가기 / 미션바 / 건너뛰기)
-              오른쪽(키오스크 화면)
-     data-mode: "tutorial" | "practice"
-     tutorial 이면 안내/하이라이트 ON, practice 면 OFF
-============================================ -->
-  <div class="wrap" id="wrap" data-mode="tutorial">
-
-    <!-- ===== 왼쪽 컬럼 ===== -->
+  <div class="wrap">
     <aside class="side">
-      <button class="btn-exit" id="btnExit">&lt; 나가기</button>
-
-      <div class="mission-bar" id="missionBar">
-        <span class="mission-emoji">🧑</span>
-        <span class="mission-text" id="missionText">1단계: 따뜻한 아메리카노 담기</span>
-      </div>
-
-      <div class="side-spacer"></div>
-
-      <button class="btn-skip" id="btnSkip">건너뛰기</button>
+      <a href="/" class="btn-exit">&lt; 나가기</a>
     </aside>
 
     <!-- ===== 오른쪽: 키오스크 화면 ===== -->
@@ -75,12 +55,15 @@
         </div>
       </div>
 
-      <!-- 심화 단계 tutorial 단계에서 키오스크 화면 안쪽만 어둡게 하는 딤 오버레이 -->
-      <div class="tutorial-dim" id="tutorialDim" hidden></div>
-
     </main>
-
   </div>
+
+  <div class="kiosk-size-control" aria-label="키오스크 화면 크기">
+    <span>화면 크기</span>
+    <button type="button" data-kiosk-size="normal">일반</button>
+    <button type="button" data-kiosk-size="large">확대</button>
+  </div>
+
 
   <!-- ===== 옵션 선택 팝업 (Step2/Step3) ===== -->
   <div class="modal-back" id="optionModal" hidden>
@@ -94,34 +77,14 @@
     </div>
   </div>
 
-  <!-- ===== 결제 창 팝업 ===== -->
-  <div class="modal-back" id="payModal" hidden>
-    <div class="modal pay-modal">
-      <div class="modal-head">
-        <span>결제 방법</span>
-        <button class="modal-close" id="payClose" aria-label="닫기">✕</button>
-      </div>
-      <div class="modal-body pay-list">
-        <button class="pay-method" data-pay="card">카드로 결제</button>
-        <button class="pay-method" data-pay="cash">현금으로 결제</button>
-        <button class="pay-method" data-pay="mobile">간편결제</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       아래부터는 심화 단계(쿠폰 사용 / 포인트 적립) 전용 화면.
-       결제하기를 누른 뒤 이어지는 흐름에서 advanced_tutorial.js 가 연다.
-  ============================================================ -->
-
-  <!-- ===== 심화(쿠폰): 쿠폰 사용 여부 ===== -->
+  <!-- ===== 쿠폰 사용 여부 ===== -->
   <div class="modal-back" id="couponAskModal" hidden>
     <div class="modal">
       <div class="modal-head">
         <span>쿠폰을 사용하시겠습니까?</span>
         <button class="modal-close" id="couponAskClose" aria-label="닫기">✕</button>
       </div>
-      <div class="modal-body" id="couponAskGuide"></div>
+      <div class="modal-body"></div>
       <div class="ask-actions">
         <button class="opt-btn" id="couponYesBtn">사용하기</button>
         <button class="opt-btn" id="couponNoBtn">사용 안 하기</button>
@@ -129,23 +92,22 @@
     </div>
   </div>
 
-  <!-- ===== 심화(쿠폰): 바코드 찍기 — 키오스크 화면 바깥(오른쪽) 장치 시뮬레이션 ===== -->
+  <!-- ===== 쿠폰 바코드 찍기 ===== -->
   <div class="barcode-panel" id="barcodePanel" hidden>
     <button class="modal-close" id="barcodeClose" aria-label="닫기">✕</button>
-    <div id="barcodeGuide"></div>
     <div class="barcode-icon">📷</div>
     <p>쿠폰 바코드를<br>스캐너에 찍어 주세요</p>
     <button class="btn-barcode" id="barcodeBtn">바코드 찍기</button>
   </div>
 
-  <!-- ===== 심화(포인트): 포인트 적립 여부 ===== -->
+  <!-- ===== 포인트 적립 여부 ===== -->
   <div class="modal-back" id="pointAskModal" hidden>
     <div class="modal">
       <div class="modal-head">
         <span>포인트를 적립하시겠습니까?</span>
         <button class="modal-close" id="pointAskClose" aria-label="닫기">✕</button>
       </div>
-      <div class="modal-body" id="pointAskGuide"></div>
+      <div class="modal-body"></div>
       <div class="ask-actions">
         <button class="opt-btn" id="pointYesBtn">적립하기</button>
         <button class="opt-btn" id="pointNoBtn">적립 안 하기</button>
@@ -153,7 +115,7 @@
     </div>
   </div>
 
-  <!-- ===== 심화(포인트): 화면 키패드로 전화번호 입력 ===== -->
+  <!-- ===== 전화번호 입력 ===== -->
   <div class="modal-back" id="keypadModal" hidden>
     <div class="modal">
       <div class="modal-head">
@@ -161,7 +123,6 @@
         <button class="modal-close" id="keypadClose" aria-label="닫기">✕</button>
       </div>
       <div class="modal-body">
-        <div id="keypadGuide"></div>
         <div class="keypad-display" id="keypadDisplay">010-0000-0000</div>
         <div class="keypad-grid">
           <button class="keypad-num" data-num="1">1</button>
@@ -182,14 +143,14 @@
     </div>
   </div>
 
-  <!-- ===== 심화: 결제 여부 확인 (쿠폰/포인트 공용) ===== -->
+  <!-- ===== 결제 여부 확인 ===== -->
   <div class="modal-back" id="payConfirmModal" hidden>
     <div class="modal">
       <div class="modal-head">
         <span>결제하시겠습니까?</span>
         <button class="modal-close" id="payConfirmClose" aria-label="닫기">✕</button>
       </div>
-      <div class="modal-body" id="payConfirmGuide"></div>
+      <div class="modal-body"></div>
       <div class="ask-actions">
         <button class="opt-btn" id="payConfirmYes">예</button>
         <button class="opt-btn" id="payConfirmNo">아니요</button>
@@ -197,40 +158,22 @@
     </div>
   </div>
 
-  <!-- ===== 완료 화면 (1~3단계 모두 통과 시) ===== -->
-  <div class="done-screen" id="doneScreen" hidden>
-    <div class="done-inner">
-      <div class="done-emoji">🎉</div>
-      <h1 class="done-title">축하합니다!</h1>
-      <p class="done-text">모든 단계를 끝내셨습니다!</p>
-      <p class="done-sub">심화 과정도 연습해 보세요.</p>
-      <div class="done-actions">
-        <a class="done-btn done-coupon" href="/tutorial/?step=coupon">쿠폰 사용</a>
-        <a class="done-btn done-point" href="/tutorial/?step=point">포인트 적립</a>
-      </div>
-      <a class="done-home" href="/">나가기</a>
-    </div>
-  </div>
-
-  <!-- ===== 심화: 결과 창 — practice(안내 없음) 단계에서 결제 완료(확정 행동) 후 판정 결과 ===== -->
-  <div class="modal-back" id="resultModal" hidden>
-    <div class="modal result-modal">
+  <!-- ===== 결제 창 팝업 ===== -->
+  <div class="modal-back" id="payModal" hidden>
+    <div class="modal pay-modal">
       <div class="modal-head">
-        <span id="resultTitle">결과</span>
-        <button class="modal-close" id="resultClose" aria-label="닫기">✕</button>
+        <span>결제 방법</span>
+        <button class="modal-close" id="payClose" aria-label="닫기">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="result-emoji" id="resultEmoji">🎉</div>
-        <ul class="result-checklist" id="resultChecklist"></ul>
+      <div class="modal-body pay-list">
+        <button class="pay-method" data-pay="card">카드로 결제</button>
+        <button class="pay-method" data-pay="cash">현금으로 결제</button>
+        <button class="pay-method" data-pay="mobile">간편결제</button>
       </div>
-      <button class="modal-cta" id="resultBtn">확인</button>
     </div>
   </div>
 
-  <script src="{% static 'js/progress.js' %}"></script>
   <script src="{% static 'js/missions.js' %}"></script>
-  <script src="{% static 'js/tutorial.js' %}"></script>
-  <script src="{% static 'js/advanced_tutorial.js' %}"></script>
+  <script src="{% static 'js/practice_free.js' %}"></script>
 </body>
-
 </html>
