@@ -657,8 +657,26 @@ function passStep() {
     flash("잘하셨어요!", true);
     console.log("[통과]", state.stepId, state.phase);
     const idx = STEP_ORDER.indexOf(state.stepId);
-    if (idx < STEP_ORDER.length - 1) setTimeout(() => startStep(STEP_ORDER[idx + 1]), 1300);
-    else setTimeout(showDoneScreen, 1200);
+    if (idx < STEP_ORDER.length - 1) {
+        const finishedStep = state.stepId;
+        const nextStep = STEP_ORDER[idx + 1];
+        setTimeout(() => showStepDoneScreen(finishedStep, nextStep), 1300);
+    } else {
+        setTimeout(showDoneScreen, 1200);
+    }
+}
+
+//  1·2단계 통과 시 다음 단계로 넘어가기 전 보여주는 결과 화면
+function showStepDoneScreen(finishedStep, nextStep) {
+    clearInterval(state.timerId);   // 타이머 정지
+    closeModals();
+    const stepNum = STEP_ORDER.indexOf(finishedStep) + 1;
+    document.getElementById("stepDoneTitle").textContent = stepNum + "단계를 끝내셨습니다!";
+    document.getElementById("stepDoneNextBtn").onclick = () => {
+        document.getElementById("stepDoneScreen").hidden = true;
+        startStep(nextStep);
+    };
+    document.getElementById("stepDoneScreen").hidden = false;
 }
 
 //  1~3단계 모두 통과 시 흰 배경 완료 화면 표시
