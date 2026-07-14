@@ -821,9 +821,13 @@ body {
 }
 
 .done-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 180px;
-    padding: 26px 16px;
-    border-radius: 16px;
+    padding: 28px 16px;
+    border-radius: 24px;
     border: 3px solid var(--ink);
     background: #fff;
     font-size: 22px;
@@ -838,6 +842,12 @@ body {
 .done-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 18px rgba(0, 0, 0, .15);
+}
+
+.done-btn-emoji {
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 12px;
 }
 
 .done-coupon {
@@ -856,6 +866,64 @@ body {
     font-weight: 700;
     color: #888;
     text-decoration: underline;
+}
+
+/* ============================================================
+   단계 완료 화면 (1·2단계 통과 시, 다음 단계로 넘어가기 전)
+============================================================ */
+.step-done-emoji {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 14px;
+}
+
+.step-done-title {
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--ink);
+    margin-bottom: 10px;
+}
+
+.step-done-sub {
+    font-size: 17px;
+    font-weight: 700;
+    color: #777;
+    margin-bottom: 32px;
+}
+
+.step-done-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.step-done-btn {
+    width: 180px;
+    padding: 18px 12px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+}
+
+.step-done-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .15);
+}
+
+.step-done-next {
+    background: #fdf4e3;
+    border-color: #d9a441;
+    color: #8a5a10;
+}
+
+.step-done-wrong {
+    background: #fdecea;
+    border-color: var(--mega-red);
+    color: var(--mega-red-dark);
 }
 
 /* ============================================================

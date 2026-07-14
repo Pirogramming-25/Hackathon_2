@@ -244,8 +244,7 @@ function openResult(pass, checks) {
 function closeResult() {
     resultModal.hidden = true;
     if (lastResultPass) {
-        flash("심화 단계를 완료했어요!");
-        setTimeout(() => { window.location.href = "/"; }, 1300);
+        showAdvDoneScreen();
         return;
     }
     resetAdvancedRun();
@@ -253,6 +252,22 @@ function closeResult() {
 }
 resultBtn.onclick = closeResult;
 document.getElementById("resultClose").onclick = closeResult;
+
+//  ---- 심화 단계(쿠폰/포인트) 통과 시 완료 화면 ----
+const advDoneScreen = document.getElementById("advDoneScreen");
+const advDoneText = document.getElementById("advDoneText");
+const advDoneCouponBtn = document.getElementById("advDoneCouponBtn");
+const advDonePointBtn = document.getElementById("advDonePointBtn");
+function showAdvDoneScreen() {
+    clearInterval(state.timerId);   // 타이머 정지
+    closeModals();
+    const doneLabel = state.stepId === "coupon" ? "쿠폰 사용" : "포인트 적립";
+    advDoneText.textContent = doneLabel + " 단계를 끝내셨습니다!";
+    // 방금 끝낸 심화 단계 버튼은 감추고, 아직 안 해본 나머지 단계만 보여준다
+    advDoneCouponBtn.hidden = state.stepId === "coupon";
+    advDonePointBtn.hidden = state.stepId === "point";
+    advDoneScreen.hidden = false;
+}
 
 //  ---- 심화 팝업 전체 닫기 — tutorial.js 의 closeModals() 에서 훅으로 호출됨 ----
 function closeAdvancedModals() {
