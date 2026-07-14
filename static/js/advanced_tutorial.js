@@ -51,13 +51,6 @@ const payConfirmGuide = document.getElementById("payConfirmGuide");
 const payConfirmYes = document.getElementById("payConfirmYes");
 const payConfirmNo = document.getElementById("payConfirmNo");
 
-const resultModal = document.getElementById("resultModal");
-const resultEmoji = document.getElementById("resultEmoji");
-const resultTitle = document.getElementById("resultTitle");
-const resultChecklist = document.getElementById("resultChecklist");
-const resultBtn = document.getElementById("resultBtn");
-
-
 //  ---- 화면 동기화 — tutorial.js 의 render() 끝에서 훅으로 호출됨 ----
 function renderAdvancedUI() {
     // 이전 렌더에서 남은 스포트라이트(hl-pop) 정리 후 현재 강조 요소로 다시 계산
@@ -333,31 +326,6 @@ function saveAdvancedWrongNote(errors) {
     });
 }
 
-//  ---- 결과 창 ----
-let lastResultPass = false;
-function openResult(pass, checks) {
-    lastResultPass = pass;
-    state.advStage = "result";
-    resultEmoji.textContent = pass ? "🎉" : "😅";
-    resultTitle.textContent = pass ? "완벽해요!" : "다시 확인해 볼까요?";
-    resultChecklist.innerHTML = checks.map(c =>
-        `<li class="${c.ok ? "ok" : "bad"}">${c.ok ? "✅" : "❌"} ${c.label}</li>`
-    ).join("");
-    resultBtn.textContent = pass ? "다음으로" : "다시 도전하기";
-    resultModal.hidden = false;
-}
-function closeResult() {
-    resultModal.hidden = true;
-    if (lastResultPass) {
-        showAdvDoneScreen();
-        return;
-    }
-    resetAdvancedRun();
-    render();
-}
-resultBtn.onclick = closeResult;
-document.getElementById("resultClose").onclick = closeResult;
-
 //  ---- 심화 단계(쿠폰/포인트) 통과 시 완료 화면 ----
 const advDoneScreen = document.getElementById("advDoneScreen");
 const advDoneText = document.getElementById("advDoneText");
@@ -381,7 +349,6 @@ function closeAdvancedModals() {
     pointAskModal.hidden = true;
     keypadModal.hidden = true;
     payConfirmModal.hidden = true;
-    resultModal.hidden = true;
 }
 
 //  ---- tutorial ⇄ practice 전환 ----
@@ -448,7 +415,7 @@ function advancedPassStep() {
     }
 
     recordAdvancedAction("complete-practice", checks);
-    openResult(true, checks);
+    showAdvDoneScreen();
 }
 
 //  초기 동기화 (이 스크립트는 tutorial.js 의 최초 startStep() 이후에 로드됨)
