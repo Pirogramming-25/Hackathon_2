@@ -119,6 +119,14 @@ body {
     text-align: right;
 }
 
+.mission-target-divider {
+    width: 100%;
+    height: 0;
+    margin: 8px 0;
+    border: 0;
+    border-top: 3px dashed #d9a441;
+}
+
 .btn-skip {
     background: #fdf4e3;
     border: 2px solid #c9c2b0;

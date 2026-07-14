@@ -105,39 +105,36 @@ const STEP_BADGE = {
 //  해당 미션에 없는 조건(target 에 키가 없거나, 온도 선택이 없는 iceOnly 메뉴)은 행 자체를 만들지 않는다.
 function renderMissionCard() {
     const mission = MISSIONS[state.stepId];
-    const t = mission.target || {};
-    const menu = MENU_BY_ID[mission.correctMenu];
 
     missionBadge.textContent = STEP_BADGE[state.stepId] || "목표";
 
-    const rows = [["메뉴", menu.name]];
+    const missionTargets = Array.isArray(mission.targets) && mission.targets.length > 0
+        ? mission.targets
+        : [{ correctMenu: mission.correctMenu, target: mission.target || {} }];
+    const rows = [];
 
-    if (t.temp !== undefined && !menu.iceOnly) {
-        rows.push(["온도", getOptionLabel(mission, "temp", t.temp)]);
-    }
-    if (t.size !== undefined) {
-        rows.push(["크기", getOptionLabel(mission, "size", t.size)]);
-    }
-    if (t.qty !== undefined) {
-        rows.push(["수량", `${t.qty}잔`]);
-    }
-    if (t.place !== undefined) {
-        rows.push(["이용 방식", getOptionLabel(mission, "place", t.place)]);
-    }
-    const payMethod = t.payMethod ?? t.payment;
-    if (payMethod !== undefined) {
-        rows.push(["결제", getOptionLabel(mission, "payment", payMethod)]);
-    }
-    if (t.useCoupon !== undefined) {
-        rows.push(["쿠폰", t.useCoupon ? "O" : "X"]);
-    }
-    if (t.usePoint !== undefined) {
-        rows.push(["적립", t.usePoint ? "O" : "X"]);
-    }
+    missionTargets.forEach((missionTarget, index) => {
+        const t = missionTarget.target || {};
+        const menu = MENU_BY_ID[missionTarget.correctMenu];
+
+        if (index > 0) rows.push(null);
+
+        rows.push(["메뉴", menu.name]);
+        if (t.temp !== undefined && !menu.iceOnly) rows.push(["온도", getOptionLabel(mission, "temp", t.temp)]);
+        if (t.size !== undefined) rows.push(["크기", getOptionLabel(mission, "size", t.size)]);
+        if (t.qty !== undefined) rows.push(["수량", `${t.qty}잔`]);
+        if (t.place !== undefined) rows.push(["이용 방식", getOptionLabel(mission, "place", t.place)]);
+
+        const payMethod = t.payMethod ?? t.payment;
+        if (payMethod !== undefined) rows.push(["결제", getOptionLabel(mission, "payment", payMethod)]);
+        if (t.useCoupon !== undefined) rows.push(["쿠폰", t.useCoupon ? "O" : "X"]);
+        if (t.usePoint !== undefined) rows.push(["적립", t.usePoint ? "O" : "X"]);
+    });
 
     missionRows.innerHTML = rows
-        .map(([label, value]) =>
-            `<div class="mission-row"><span class="mission-row-label">${label}</span><span class="mission-row-value">${value}</span></div>`
+        .map(row => row
+            ? `<div class="mission-row"><span class="mission-row-label">${row[0]}</span><span class="mission-row-value">${row[1]}</span></div>`
+            : `<div class="mission-target-divider" aria-hidden="true"></div>`
         )
         .join("");
 }
@@ -610,6 +607,10 @@ function judgeOptions(mission, options = {}) {
 }
 
 function judgeCart(mission) {
+    if (Array.isArray(mission.targets) && mission.targets.length > 1) {
+        return judgeMultiTargetCart(mission);
+    }
+
     const errors = [];
 
     if (state.cart.length !== 1) {
@@ -671,6 +672,59 @@ function judgeCart(mission) {
         createJudgeResult(errors),
         judgeOptions(mission, finalOptions)
     );
+}
+
+// 3단계 전용: 서로 다른 목표 메뉴 2개와 각 메뉴의 옵션을 모두 판별한다.
+function judgeMultiTargetCart(mission) {
+    const results = [];
+    const expectedMenuIds = mission.targets.map(item => item.correctMenu);
+    const unexpectedItems = state.cart.filter(item => !expectedMenuIds.includes(item.menuId));
+
+    if (state.cart.length !== mission.targets.length || unexpectedItems.length > 0) {
+        results.push(createJudgeResult([{
+            section: "메뉴 선택",
+            mistakeType: "menu",
+            label: "메뉴",
+            selectedValue: state.cart.map(item => item.menuId),
+            expectedValue: expectedMenuIds,
+            reason: `장바구니에는 목표 메뉴 ${mission.targets.length}개만 담아 주세요.`
+        }]));
+    }
+
+    mission.targets.forEach((missionTarget, index) => {
+        const cartItem = state.cart.find(item => item.menuId === missionTarget.correctMenu);
+        const menuName = MENU_BY_ID[missionTarget.correctMenu].name;
+
+        if (!cartItem) {
+            results.push(createJudgeResult([{
+                section: `목표 ${index + 1} 메뉴 선택`,
+                mistakeType: "menu",
+                label: "메뉴",
+                selectedValue: null,
+                expectedValue: missionTarget.correctMenu,
+                reason: `목표 ${index + 1}의 ‘${menuName}’ 메뉴를 담아 주세요.`
+            }]));
+            return;
+        }
+
+        const targetMission = {
+            ...mission,
+            correctMenu: missionTarget.correctMenu,
+            target: missionTarget.target
+        };
+        const finalOptions = {
+            ...(cartItem.options ?? {}),
+            qty: cartItem.qty
+        };
+        const optionResult = judgeOptions(targetMission, finalOptions);
+
+        optionResult.errors.forEach(error => {
+            error.section = `목표 ${index + 1} ${menuName} · ${error.section}`;
+        });
+        results.push(optionResult);
+    });
+
+    return combineJudgeResults(...results);
 }
 
 function judgePayment(mission, payId) {
