@@ -1104,3 +1104,251 @@ body {
     padding: 14px;
     font-size: 18px;
 }
+
+/* 자유 연습 전용 키오스크 크기 조절 */
+.kiosk-size-control {
+    position: fixed;
+    right: 52px;
+    bottom: 96px;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid #e2e2e2;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .14);
+}
+
+.kiosk-size-control span {
+    margin-right: 4px;
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.kiosk-size-control button {
+    min-width: 76px;
+    min-height: 48px;
+    padding: 8px 14px;
+    border: 2px solid #d6d9df;
+    border-radius: 11px;
+    background: #fff;
+    color: #171717;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.kiosk-size-control button.active {
+    border-color: #f07a00;
+    background: #f07a00;
+    color: #fff;
+}
+
+/* 일반: Step 1·2·3 및 심화 과정과 같은 기본 크기 */
+body.kiosk-size-normal .wrap {
+    grid-template-columns: 280px 620px;
+    gap: 20px;
+}
+
+body.kiosk-size-normal .btn-exit {
+    padding: 6px 4px;
+    font-size: 22px;
+}
+
+body.kiosk-size-normal .kiosk-tabs {
+    padding: 8px;
+    gap: 6px;
+}
+
+body.kiosk-size-normal .tab-nav {
+    width: 46px;
+    min-height: auto;
+    font-size: 20px;
+}
+
+body.kiosk-size-normal .tab-list {
+    gap: 6px;
+}
+
+body.kiosk-size-normal .tab-btn {
+    min-height: auto;
+    padding: 12px 6px;
+    font-size: 18px;
+}
+
+body.kiosk-size-normal .kiosk-menu {
+    padding: 16px;
+}
+
+body.kiosk-size-normal .menu-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+body.kiosk-size-normal .menu-item {
+    min-height: auto;
+    padding: 14px 8px 12px;
+    gap: 6px;
+}
+
+body.kiosk-size-normal .menu-item .m-thumb {
+    width: 78px;
+    height: 78px;
+    font-size: 40px;
+}
+
+body.kiosk-size-normal .menu-item .m-name {
+    min-height: 2.5em;
+    font-size: 15px;
+}
+
+body.kiosk-size-normal .menu-item .m-price {
+    font-size: 16px;
+}
+
+body.kiosk-size-normal .carousel-arrow {
+    width: 34px;
+    height: 66px;
+    font-size: 22px;
+}
+
+body.kiosk-size-normal .kiosk-cart {
+    grid-template-columns: 1fr 300px;
+    padding: 16px;
+}
+
+body.kiosk-size-normal .cart-list {
+    min-height: 140px;
+    max-height: 190px;
+}
+
+body.kiosk-size-normal .cart-row {
+    grid-template-columns: 30px 1fr auto auto;
+    gap: 10px;
+    padding: 6px 4px;
+}
+
+body.kiosk-size-normal .cart-x {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+}
+
+body.kiosk-size-normal .cart-name,
+body.kiosk-size-normal .cart-price,
+body.kiosk-size-normal .cart-empty {
+    font-size: 16px;
+}
+
+body.kiosk-size-normal .qty-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+}
+
+body.kiosk-size-normal .qty-num {
+    font-size: 16px;
+}
+
+body.kiosk-size-normal .summary-count {
+    font-size: 17px;
+}
+
+body.kiosk-size-normal .timer-label {
+    font-size: 16px;
+}
+
+body.kiosk-size-normal .timer-value {
+    font-size: 20px;
+}
+
+body.kiosk-size-normal .timer-value strong {
+    font-size: 40px;
+}
+
+body.kiosk-size-normal .btn-clear {
+    width: 64px;
+    height: 64px;
+    font-size: 15px;
+}
+
+body.kiosk-size-normal .btn-pay {
+    min-height: auto;
+    padding: 16px 20px;
+}
+
+body.kiosk-size-normal .pay-icon {
+    font-size: 26px;
+}
+
+body.kiosk-size-normal .pay-body {
+    font-size: 22px;
+}
+
+body.kiosk-size-normal .modal {
+    width: min(440px, 92vw);
+}
+
+body.kiosk-size-normal .modal-head {
+    padding: 16px 20px;
+    font-size: 20px;
+}
+
+body.kiosk-size-normal .modal-close {
+    width: auto;
+    height: auto;
+    font-size: 20px;
+}
+
+body.kiosk-size-normal .modal-body {
+    padding: 20px;
+}
+
+body.kiosk-size-normal .opt-label,
+body.kiosk-size-normal .opt-fixed {
+    font-size: 18px;
+}
+
+body.kiosk-size-normal .opt-btn {
+    min-height: auto;
+    padding: 14px;
+    font-size: 18px;
+}
+
+body.kiosk-size-normal .opt-qty .qty-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+}
+
+body.kiosk-size-normal .opt-qty .qty-num {
+    font-size: 24px;
+}
+
+body.kiosk-size-normal .modal-cta {
+    min-height: auto;
+    font-size: 20px;
+}
+
+body.kiosk-size-normal .pay-method {
+    min-height: auto;
+    padding: 20px;
+    font-size: 19px;
+}
+
+@media (max-width: 1080px) {
+    .kiosk-size-control {
+        right: 12px;
+        bottom: 12px;
+    }
+}
+
+@media (max-width: 980px) {
+    body.kiosk-size-normal .wrap,
+    body.kiosk-size-large .wrap {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}

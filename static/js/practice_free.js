@@ -27,6 +27,23 @@ const keypadModal = document.getElementById("keypadModal");
 const keypadDisplay = document.getElementById("keypadDisplay");
 const payConfirmModal = document.getElementById("payConfirmModal");
 const MENU_BY_ID = Object.fromEntries(MENUS.map(menu => [menu.id, menu]));
+const KIOSK_SIZE_KEY = "practiceFreeKioskSize";
+
+function applyKioskSize(size) {
+    const nextSize = size === "large" ? "large" : "normal";
+    document.body.classList.toggle("kiosk-size-large", nextSize === "large");
+    document.body.classList.toggle("kiosk-size-normal", nextSize === "normal");
+    document.querySelectorAll("[data-kiosk-size]").forEach(button => {
+        const isActive = button.dataset.kioskSize === nextSize;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+    });
+    localStorage.setItem(KIOSK_SIZE_KEY, nextSize);
+}
+
+document.querySelectorAll("[data-kiosk-size]").forEach(button => {
+    button.onclick = () => applyKioskSize(button.dataset.kioskSize);
+});
 
 //  전체 렌더
 function render() {
@@ -369,5 +386,6 @@ document.getElementById("carNext").onclick = () => shiftCat(1);
     };
 });
 
+applyKioskSize(localStorage.getItem(KIOSK_SIZE_KEY) || "normal");
 render();
 startTimer(120);
