@@ -92,6 +92,14 @@ couponYesBtn.onclick = () => {
     openBarcodePanel();
 };
 couponNoBtn.onclick = () => {
+    if (state.phase === "tutorial") {
+        reportWrong(
+            "쿠폰을 사용해야 하는 미션이에요.",
+            [{ mistakeType: "coupon" }]
+        );
+        return;
+    }
+
     recordAdvancedAction("coupon-ask", "사용 안 하기");
     state.appliedCoupon = false;
     couponAskModal.hidden = true;
@@ -130,6 +138,14 @@ pointYesBtn.onclick = () => {
     openKeypad();
 };
 pointNoBtn.onclick = () => {
+    if (state.phase === "tutorial") {
+        reportWrong(
+            "포인트를 적립해야 하는 미션이에요.",
+            [{ mistakeType: "point" }]
+        );
+        return;
+    }
+
     recordAdvancedAction("point-ask", "적립 안 하기");
     state.pointPhone = false;
     pointAskModal.hidden = true;
@@ -191,6 +207,14 @@ payConfirmYes.onclick = () => {
     payModal.hidden = false;
 };
 payConfirmNo.onclick = () => {
+    if (state.phase === "tutorial") {
+        reportWrong(
+            "결제를 진행해야 미션을 완료할 수 있어요.",
+            [{ mistakeType: "payConfirm" }]
+        );
+        return;
+    }
+
     recordAdvancedAction("pay-confirm", "아니요");
     payConfirmModal.hidden = true;
     state.advStage = "shopping";
