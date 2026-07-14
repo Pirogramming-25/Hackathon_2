@@ -51,6 +51,13 @@ const payConfirmGuide = document.getElementById("payConfirmGuide");
 const payConfirmYes = document.getElementById("payConfirmYes");
 const payConfirmNo = document.getElementById("payConfirmNo");
 
+const resultModal = document.getElementById("resultModal");
+const resultEmoji = document.getElementById("resultEmoji");
+const resultTitle = document.getElementById("resultTitle");
+const resultChecklist = document.getElementById("resultChecklist");
+const resultBtn = document.getElementById("resultBtn");
+
+
 //  ---- 화면 동기화 — tutorial.js 의 render() 끝에서 훅으로 호출됨 ----
 function renderAdvancedUI() {
     // 이전 렌더에서 남은 스포트라이트(hl-pop) 정리 후 현재 강조 요소로 다시 계산
@@ -198,6 +205,55 @@ payConfirmNo.onclick = () => {
 document.getElementById("payConfirmClose").onclick = closeModals;
 payConfirmModal.onclick = (e) => { if (e.target === payConfirmModal) closeModals(); };
 
+//  ---- 결제 완료(확정 행동) 기준 판정 — practice 단계에서만 사용 ----
+//  guide 문구가 없는 practice 에서는 사용자가 직접 담고/쿠폰·포인트 처리하고/결제한 결과를
+//  미션의 target 과 비교해 잘했는지 판단한다
+function optLabel(group, id) {
+    const found = OPTION_SET[group].find(o => o.id === id);
+    return found ? found.label : id;
+}
+function judgeAdvanced() {
+    const m = MISSIONS[state.stepId];
+    const t = m.target;
+    const item = state.cart.find(c => c.menuId === m.correctMenu);
+
+    const checks = [
+        { label: `${MENU_BY_ID[m.correctMenu].name} 담기`, ok: !!item },
+        { label: `수량 ${t.qty}개`, ok: !!item && item.qty === t.qty },
+    ];
+    if (t.useCoupon) checks.push({ label: "쿠폰 사용하기", ok: state.appliedCoupon === true });
+    if (t.usePoint) checks.push({ label: "포인트 적립하기", ok: !!state.pointPhone });
+    checks.push({ label: "결제 완료하기", ok: true });
+
+    return { pass: checks.every(c => c.ok), checks };
+}
+
+//  ---- 결과 창 ----
+let lastResultPass = false;
+function openResult(pass, checks) {
+    lastResultPass = pass;
+    state.advStage = "result";
+    resultEmoji.textContent = pass ? "🎉" : "😅";
+    resultTitle.textContent = pass ? "완벽해요!" : "다시 확인해 볼까요?";
+    resultChecklist.innerHTML = checks.map(c =>
+        `<li class="${c.ok ? "ok" : "bad"}">${c.ok ? "✅" : "❌"} ${c.label}</li>`
+    ).join("");
+    resultBtn.textContent = pass ? "다음으로" : "다시 도전하기";
+    resultModal.hidden = false;
+}
+function closeResult() {
+    resultModal.hidden = true;
+    if (lastResultPass) {
+        flash("심화 단계를 완료했어요!");
+        setTimeout(() => { window.location.href = "/"; }, 1300);
+        return;
+    }
+    resetAdvancedRun();
+    render();
+}
+resultBtn.onclick = closeResult;
+document.getElementById("resultClose").onclick = closeResult;
+
 //  ---- 심화 팝업 전체 닫기 — tutorial.js 의 closeModals() 에서 훅으로 호출됨 ----
 function closeAdvancedModals() {
     couponAskModal.hidden = true;
@@ -205,6 +261,7 @@ function closeAdvancedModals() {
     pointAskModal.hidden = true;
     keypadModal.hidden = true;
     payConfirmModal.hidden = true;
+    resultModal.hidden = true;
 }
 
 //  ---- tutorial ⇄ practice 전환 ----
@@ -239,9 +296,10 @@ function advancedPassStep() {
         render();
         return;
     }
-    recordAdvancedAction("complete-practice", "심화 단계 완료");
-    flash("심화 단계를 완료했어요!");
-    setTimeout(() => { window.location.href = "/"; }, 1300);
+    // practice(안내 없음) 단계: 결제하기(확정 행동) 시점의 실제 상태를 미션 target 과 비교해 판정
+    const { pass, checks } = judgeAdvanced();
+    recordAdvancedAction(pass ? "complete-practice" : "fail-practice", checks);
+    openResult(pass, checks);
 }
 
 //  초기 동기화 (이 스크립트는 tutorial.js 의 최초 startStep() 이후에 로드됨)
