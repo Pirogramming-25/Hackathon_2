@@ -12,6 +12,8 @@ const state = {
     pendingOpt: null,    // { temp, size, qty, place }
     timeLeft: 120,
     timerId: null,
+    timeExpired: false,
+    runVersion: 0,
     // 심화 단계(쿠폰/포인트) 전용 — advanced_tutorial.js 에서 사용
     appliedCoupon: null,
     pointPhone: null,
@@ -49,6 +51,7 @@ function startStep(stepId) {
     state.pointPhone = null;
     state.phase = "tutorial";
     state.advStage = "shopping";
+    state.timeExpired = false;
     missionText.textContent = MISSIONS[stepId].title;
     closeModals();
     startTimer(MISSIONS[stepId].timeLimit || 120);
@@ -151,7 +154,14 @@ function updateSummary() {
 //  1단계(flow)는 클릭 흐름만 익히므로 옵션 팝업 없이 바로 담는다.
 //  2·3단계(및 심화)는 옵션 팝업(온도·크기·수량·포장)을 거쳐 담는다.
 function onSelectMenu(menuId) {
-    if (MISSIONS[state.stepId].judge === "flow") {
+    if (isBaseStep() && !ensureTimeRemaining()) return;
+    const m = MISSIONS[state.stepId];
+    // 기본/옵션 단계는 메뉴를 누르는 순간 오답을 알려 준다.
+    if (state.phase === "tutorial" && (m.judge === "flow" || m.judge === "strict") && menuId !== m.correctMenu) {
+        reportWrong(`‘${MENU_BY_ID[m.correctMenu].name}’ 메뉴를 선택해 주세요`);
+        return;
+    }
+    if (m.judge === "flow") {
         addToCart(menuId, 1, null);
         return;
     }
@@ -236,7 +246,7 @@ document.getElementById("optionAdd").onclick = () => {
     const m = MISSIONS[state.stepId];
     const o = state.pendingOpt;
 
-    if (!judgeStrict(m, o)) return;   // 지금은 항상 통과. 실제 판정은 개발자4가 채움
+    if ((isBaseStep() && !ensureTimeRemaining()) || !judgeStrict(m, o)) return;
 
     addToCart(state.pendingMenu, o.qty, { ...o });
     closeModals();
@@ -244,7 +254,11 @@ document.getElementById("optionAdd").onclick = () => {
 
 //  결제 흐름
 btnPay.onclick = () => {
-    if (!state.cart.length) { flash("메뉴를 먼저 담아 주세요"); return; }
+    if (isBaseStep() && !ensureTimeRemaining()) return;
+    if (!state.cart.length) {
+        if (!isBaseStep() || state.phase === "tutorial") flash("메뉴를 먼저 담아 주세요");
+        return;
+    }
     // 심화 단계: 결제수단 팝업 전에 쿠폰/포인트 사용 여부부터 묻는다 (advanced_tutorial.js)
     if (state.stepId === "coupon" && typeof openCouponAsk === "function") { openCouponAsk(); return; }
     if (state.stepId === "point" && typeof openPointAsk === "function") { openPointAsk(); return; }
@@ -257,21 +271,65 @@ payModal.querySelectorAll(".pay-method").forEach(el => {
 
 function onPay(payId) {
     const m = MISSIONS[state.stepId];
+    if (isBaseStep() && !ensureTimeRemaining()) return;
     if (m.judge === "real") {
         const sec = (m.timeLimit || 120) - state.timeLeft;
         reportRecord(sec);
+    }
+
+    // 실습과 3단계는 오답을 기록하되, 사용자의 결제 흐름은 막지 않는다.
+    if (state.phase === "practice" || m.judge === "real") {
+        const result = judgeCart(m);
+        if (!result.pass) reportWrong(result.reason);
     }
     closeModals();
     passStep();
 }
 
-//  판정 훅  — 지금은 흐름 확인용 stub
 function judgeStrict(m, o) {
-    // TODO: m.target 과 o 조합 비교 후 오답이면 reportWrong + return false
-    return true;
+    // 실습 단계에서는 자유롭게 조합해 보고 결제까지 진행할 수 있다.
+    if (m.judge !== "strict" || state.phase !== "tutorial") return true;
+    const result = judgeOptions(m, o);
+    if (!result.pass) reportWrong(result.reason);
+    return result.pass;
+}
+
+function judgeOptions(m, options) {
+    const labels = { temp: "온도", size: "크기", qty: "수량", place: "포장/매장" };
+    for (const key of ["temp", "size", "qty", "place"]) {
+        if (options[key] !== m.target[key]) {
+            return { pass: false, reason: `${labels[key]} 옵션을 다시 확인해 주세요` };
+        }
+    }
+    return { pass: true };
+}
+
+function judgeCart(m) {
+    if (state.cart.length !== 1 || state.cart[0].menuId !== m.correctMenu) {
+        return { pass: false, reason: `‘${MENU_BY_ID[m.correctMenu].name}’만 담아 주세요` };
+    }
+    if (m.judge === "flow") {
+        return state.cart[0].qty === m.target.qty
+            ? { pass: true }
+            : { pass: false, reason: `수량을 ${m.target.qty}개로 선택해 주세요` };
+    }
+    return judgeOptions(m, state.cart[0].options || {});
 }
 function reportWrong(reason) {
-    flash("❌ " + reason);
+    if (!isBaseStep()) return;
+    const isPractice = state.phase === "practice";
+    const isStep3 = state.stepId === "step3";
+
+    // 튜토리얼은 즉시 안내만, 실습과 3단계는 오답노트에만 남긴다.
+    if (!isPractice && !isStep3) flash("❌ " + reason);
+    if ((isPractice || isStep3) && typeof saveWrongNote === "function") {
+        saveWrongNote({
+            stepId: state.stepId,
+            stepTitle: MISSIONS[state.stepId].title,
+            reason,
+            retryUrl: `/tutorial/?step=${encodeURIComponent(state.stepId)}`,
+        });
+    }
     console.log("[오답]", state.stepId, reason);
 }
 function reportRecord(sec) {
@@ -283,6 +341,7 @@ function resetRun() {
     state.cart = [];
     state.pendingMenu = null;
     state.pendingOpt = null;
+    state.timeExpired = false;
     closeModals();
     startTimer(MISSIONS[state.stepId].timeLimit || 120);
     missionText.textContent = MISSIONS[state.stepId].title + (state.phase === "practice" ? " (실습)" : "");
@@ -327,16 +386,41 @@ function showDoneScreen() {
     document.getElementById("doneScreen").hidden = false;
 }
 
-//  타이머 (표시용 — 시간초과 판정은 아직)
 function startTimer(sec) {
     state.timeLeft = sec;
+    state.timeExpired = false;
+    const runVersion = ++state.runVersion;
     timerNum.textContent = sec;
     clearInterval(state.timerId);
     state.timerId = setInterval(() => {
         state.timeLeft = Math.max(0, state.timeLeft - 1);
         timerNum.textContent = state.timeLeft;
-        if (state.timeLeft === 0) clearInterval(state.timerId);
+        if (state.timeLeft === 0) {
+            clearInterval(state.timerId);
+            if (!isBaseStep()) return;
+            state.timeExpired = true;
+            closeModals();
+            reportWrong("제한 시간이 지났어요. 처음부터 다시 시도해 주세요");
+            setTimeout(() => {
+                if (state.runVersion !== runVersion || !state.timeExpired) return;
+                resetRun();
+                render();
+            }, 1800);
+        }
     }, 1000);
+}
+
+function isBaseStep() {
+    return STEP_ORDER.includes(state.stepId);
+}
+
+function ensureTimeRemaining() {
+    if (!state.timeExpired && state.timeLeft > 0) return true;
+    if (!state.timeExpired) {
+        state.timeExpired = true;
+        reportWrong("제한 시간이 지났어요. 처음부터 다시 시도해 주세요");
+    }
+    return false;
 }
 
 //  튜토리얼/실습 안내 헬퍼

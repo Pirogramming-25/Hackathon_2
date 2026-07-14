@@ -20,52 +20,13 @@
     <section class="history-panel" aria-labelledby="history-title">
       <h2 id="history-title">과거 학습 이력</h2>
 
-      <div class="history-list" id="wrong-note-list">
-        <article class="history-card is-correct">
-          <div>
-            <div class="history-meta">
-              <span class="status-badge">정답</span>
-              <span>2단계 · 옵션 선택</span>
-            </div>
-            <h3>아이스/핫 선택을 놓쳤어요</h3>
-          </div>
-          <button type="button">완료</button>
-        </article>
-
-        <article class="history-card is-wrong">
-          <div>
-            <div class="history-meta">
-              <span class="status-badge">오답</span>
-              <span>2단계 · 옵션 선택</span>
-            </div>
-            <h3>아이스/핫 선택을 놓쳤어요</h3>
-          </div>
-          <button type="button">완료</button>
-        </article>
-
-        <article class="history-card is-correct">
-          <div>
-            <div class="history-meta">
-              <span class="status-badge">정답</span>
-              <span>2단계 · 옵션 선택</span>
-            </div>
-            <h3>아이스/핫 선택을 놓쳤어요</h3>
-          </div>
-          <button type="button">완료</button>
-        </article>
-
-        <article class="history-card is-wrong">
-          <div>
-            <div class="history-meta">
-              <span class="status-badge">오답</span>
-              <span>2단계 · 옵션 선택</span>
-            </div>
-            <h3>아이스/핫 선택을 놓쳤어요</h3>
-          </div>
-          <button type="button">완료</button>
-        </article>
-      </div>
+      <div class="history-list" id="wrong-note-list"></div>
     </section>
   </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/storage.js' %}"></script>
+<script src="{% static 'js/wrong_note.js' %}"></script>
 {% endblock %}
