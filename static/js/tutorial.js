@@ -193,7 +193,10 @@ function onSelectMenu(menuId) {
     const m = MISSIONS[state.stepId];
     // 기본/옵션 단계는 메뉴를 누르는 순간 오답을 알려 준다.
     if (state.phase === "tutorial" && (m.judge === "flow" || m.judge === "strict") && menuId !== m.correctMenu) {
-        reportWrong(`‘${MENU_BY_ID[m.correctMenu].name}’ 메뉴를 선택해 주세요`);
+        reportWrong(
+            `‘${MENU_BY_ID[m.correctMenu].name}’ 메뉴를 선택해 주세요`,
+            [{ mistakeType: "menu" }]
+        );
         return;
     }
     if (m.judge === "flow") {
@@ -610,11 +613,8 @@ function reportWrong(reason, details = []) {
     const isPractice = state.phase === "practice";
     const isStep3 = state.stepId === "step3";
 
-    // 튜토리얼은 기존 상세 안내를 보여 준다.
-    // 실습과 Step 3은 가장 먼저 틀린 항목 하나만 짧게 보여 준다.
-    const popupMessage = isPractice || isStep3
-        ? getShortWrongMessage(details)
-        : reason;
+    // 튜토리얼·실습·Step 3 모두 가장 먼저 틀린 항목 하나만 짧게 보여 준다.
+    const popupMessage = getShortWrongMessage(details);
 
     // reportWrong 호출 한 번당 팝업도 하나만 생성한다.
     flash("❌ " + popupMessage);
