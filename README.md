@@ -47,139 +47,95 @@
 ```js
 {
   progress: {
-    "step-1": true,
-    "step-2": false,
-    "step-3": false,
-    "coupon": false,
-    "point": false
+    "step1": 100,
+    "step2": 50,
+    "step3": 0
   },
   wrongNotes: [
     {
-      stepId: "step-2",
-      title: "아이스/핫 선택을 놓쳤어요",
-      description: "옵션 선택 단계에서 온도를 선택하지 않았어요.",
-      retryUrl: "/practice/step-2/",
-      date: "2026-07-12"
+      id: "1720780000000-ab12cd",
+      stepId: "step2",
+      stepTitle: "2단계: 옵션 선택",
+      reason: "온도 옵션을 다시 확인해 주세요.",
+      details: [{ mistakeType: "temperature", label: "온도" }],
+      status: "unresolved",
+      retryUrl: "/tutorial/?step=step2&mode=practice&retry=1720780000000-ab12cd",
+      date: "2026. 7. 12.",
+      attemptCount: 1
     }
-  ],
-  lastStep: "step-2"
+  ]
 }
 ```
 
 ## 팀 역할 분담
 
-### 디자인 시스템 / 피그마
+### 공통 디자인 및 프로젝트 기반
 
-담당자: 신은아
+- **신은아**
+  - 전체 디자인 시스템 및 피그마 화면 설계
+  - 색상·버튼·카드 스타일과 노인 친화 UI 기준 정리
+  - 서비스 로고 제작
+- **홍연우**
+  - Django 프로젝트 기본 구조 세팅
+  - 공통 템플릿과 URL 라우팅 구성
+  - `static`·`templates` 디렉터리 구조 정리
 
-- 전체 디자인 시스템 정리
-- 피그마 화면 설계
-- 색상, 버튼, 카드 스타일 기준 정리
-- 노인친화 UI 기준 정리
+### 👥 A조: 메인 페이지 및 진도율 시스템 (2명)
 
-### 코드 기본 뼈대
+담당 범위: 홈/메인 템플릿, 글씨 크기 제어, `localStorage` 기반 진도율 연동
 
-담당자: 홍연우
-
-- Django 프로젝트 기본 구조 세팅
-- 공통 템플릿 구조 설계
-- URL 라우팅 기본 연결
-- static/templates 구조 정리
-
-## A조: 메인 페이지 및 진도율 시스템
-
-담당 범위:
-
-- 홈/메인 템플릿 개발
-- 글씨 크기 제어
-- localStorage 기반 진도율 연동
-
-### 개발자 1: 홍연우
-
-담당: 템플릿 및 UI/UX
+#### 홍연우 — 템플릿 및 UI/UX
 
 - `base.html` 공통 레이아웃 구성
 - 상단 네비게이션 바 구현
   - 홈
   - 오답노트
   - 연습 시작
-- 푸터 공통화
-- 메인 화면 구현
-- 공통 CSS 구조 작성
-- 전역 글씨 크기 조절 스크립트 구현
+- 메인 화면과 공통 CSS 구조 구현
+- 전역 글씨 크기 조절 기능 구현
   - 보통
   - 크게
   - 왕크게
-- 선택된 글씨 크기를 `localStorage`에 저장
-- 페이지 이동 시 저장된 글씨 크기 CSS 클래스 자동 적용
-- Django View & URL 라우팅
+- 선택한 글씨 크기를 `localStorage`에 저장하고 페이지 이동 시 복원
+- Django View 및 URL 라우팅
   - 홈 화면 렌더링
-  - 단계별 소개/튜토리얼 페이지 연결
+  - 튜토리얼 및 자율 연습 페이지 연결
+- 오답노트 기본 레이아웃 및 목록 영역 스타일링
 
-### 개발자 2
+#### 이아린 — 뷰 로직 및 진도율 관리
 
-담당: 진도율 관리
-
-- localStorage 기반 진도율 저장
-- 기본 튜토리얼 3개 진도 관리
-  - Step 1
-  - Step 2
-  - Step 3
-- 사용자가 단계를 완료하면 완료 상태 저장
-- 홈 화면 진입 시 저장된 진도율 불러오기
-- `이어서 학습하기` 버튼에 마지막 학습 위치 반영
-
-## B조: 키오스크 튜토리얼 및 오답노트
-
-담당 범위:
-
-- 가상 키오스크 인터랙션 화면
-- 오답 판별
-- localStorage 기반 오답노트 저장 및 출력
-
-### 개발자 3
-
-담당: 시뮬레이터 UI 및 템플릿
-
-- 키오스크 튜토리얼 화면 5개 구현
+- 기본 튜토리얼 3개 구현 및 진도율 스크립트 완성
   - Step 1: 기본 주문
   - Step 2: 옵션 선택
   - Step 3: 실전 주문
+- 튜토리얼과 실습 완료 상태를 `localStorage`에 저장
+- 홈 화면 진입 시 단계별 진도율 표시
+- `이어서 학습하기` 버튼에 다음 학습 위치 반영
+
+### 👥 B조: 키오스크 튜토리얼 및 오답노트 (2명)
+
+담당 범위: 가상 키오스크 인터랙션, 오답 판별, `localStorage` 기반 오답노트 저장 및 출력
+
+#### 신은아 — 시뮬레이터 UI 및 템플릿
+
+- 상단 미션 가이드와 가상 키오스크 UI를 HTML/CSS 컴포넌트로 구현
+  - 메뉴 및 카테고리 선택
+  - 온도·크기·수량·매장/포장 옵션
+  - 장바구니와 결제 화면
+- 이아린과 협업하여 기본 튜토리얼 3개 및 진도율 연동
+- 심화 튜토리얼 2개와 로고 제작
   - 쿠폰 사용
   - 포인트 적립
-- 상단 미션 가이드 UI 구현
-- 가상 키오스크 화면 구현
-  - 메뉴 선택 버튼
-  - 옵션 선택 버튼
-  - 담기 버튼
-  - 결제 창
-- HTML/CSS 기반 키오스크 UI 컴포넌트화
 
-### 개발자 4: 서영은
+#### 서영은 — 시뮬레이터 로직 및 오답 데이터 처리
 
-담당: 시뮬레이터 로직 및 오답 데이터 처리
-
-- 미션 판별 JavaScript 구현
-- 사용자가 올바른 메뉴를 눌렀는지 판별
-- 필수 옵션을 선택했는지 판별
-- 제한 시간 초과 여부 판별
-- 틀린 경우 오답 데이터 저장
-- 오답 데이터를 JSON 객체로 생성
-- localStorage에 오답 배열 형태로 누적 저장
-- 오답노트 페이지 로드 시 localStorage 데이터 읽기
-- DOM 조작으로 오답 카드 동적 렌더링
-- 오답노트의 다시 연습 버튼 클릭 시 해당 단계 처음으로 이동
-
-### 신은아
-
-담당: 오답노트 화면 및 심화 튜토리얼 보조
-
-- 오답노트 화면 템플릿 구현
-- 오답 데이터가 들어올 리스트 영역 스타일링
-- 성공/실패 배지 UI 스타일링
-- 심화 튜토리얼 2개 화면 구성 보조
-  - 쿠폰 사용
-  - 포인트 적립
+- 메뉴·옵션·결제 흐름의 미션 판별 JavaScript 구현
+- 기본 및 심화 단계의 성공/실패 판정
+- 튜토리얼 오답 행동 차단 및 안내 팝업 처리
+- 오답 사유와 상세 항목을 JSON 객체로 구성
+- 오답 기록을 `localStorage` 배열에 누적 저장
+- 오답노트 데이터를 DOM으로 동적 렌더링
+- 오답노트의 다시 연습 및 복습 완료 처리
 
 ## 프로젝트 폴더 구조
 
@@ -200,21 +156,26 @@ slow_kiosk/
 │  ├─ base.html
 │  ├─ home.html
 │  ├─ tutorial.html
-│  ├─ practice.html
+│  ├─ practice_free.html
 │  └─ wrong_note.html
 │
 ├─ static/
 │  ├─ css/
+│  │  ├─ reset.css
 │  │  ├─ base.css
 │  │  ├─ home.css
 │  │  ├─ tutorial.css
-│  │  ├─ practice.css
+│  │  ├─ practice_free.css
 │  │  └─ wrong_note.css
 │  │
 │  └─ js/
+│     ├─ missions.js
+│     ├─ progress.js
 │     ├─ storage.js
 │     ├─ tutorial.js
-│     ├─ practice.js
+│     ├─ advanced_tutorial.js
+│     ├─ practice_free.js
+│     ├─ font_size.js
 │     └─ wrong_note.js
 │
 └─ db.sqlite3
@@ -227,7 +188,6 @@ slow_kiosk/
 - `base.html`
   - 공통 레이아웃
   - 네비게이션 바
-  - 푸터
   - 공통 CSS/JS 연결
 
 - `home.html`
@@ -237,12 +197,11 @@ slow_kiosk/
   - 이어서 학습하기 버튼
 
 - `tutorial.html`
-  - 튜토리얼 안내 화면
-  - 단계별 설명
+  - 기본 및 심화 튜토리얼 화면
+  - 가상 키오스크와 완료 화면
 
-- `practice.html`
-  - 실제 키오스크 연습 화면
-  - Step 1~3 및 심화 단계 화면
+- `practice_free.html`
+  - 미션 제한 없이 반복할 수 있는 자율 연습 화면
 
 - `wrong_note.html`
   - 오답노트 화면
@@ -263,8 +222,8 @@ slow_kiosk/
 - `tutorial.css`
   - 튜토리얼 화면 전용 스타일
 
-- `practice.css`
-  - 키오스크 시뮬레이터 화면 전용 스타일
+- `practice_free.css`
+  - 자율 연습 키오스크 화면 전용 스타일
 
 - `wrong_note.css`
   - 오답노트 화면 전용 스타일
@@ -272,17 +231,29 @@ slow_kiosk/
 ### static/js
 
 - `storage.js`
-  - localStorage 공통 함수
-  - 진도율 저장/불러오기
+  - `localStorage` 공통 함수
   - 오답노트 저장/불러오기
 
-- `tutorial.js`
-  - 튜토리얼 화면 동작
+- `missions.js`
+  - 메뉴·옵션·단계별 미션 데이터
+  - 기본 단계 랜덤 미션 생성
 
-- `practice.js`
-  - 키오스크 미션 판별
-  - 성공/실패 처리
-  - 오답 저장 호출
+- `progress.js`
+  - 단계별 진도율 저장 및 홈 화면 반영
+
+- `tutorial.js`
+  - 기본 튜토리얼·실습 화면 동작
+  - 메뉴·옵션·결제 판정
+
+- `advanced_tutorial.js`
+  - 쿠폰 및 포인트 심화 단계 흐름
+  - 심화 단계 성공·실패 판정과 오답 저장
+
+- `practice_free.js`
+  - 자율 연습 화면의 주문·결제 흐름
+
+- `font_size.js`
+  - 전역 글씨 크기 설정 저장 및 복원
 
 - `wrong_note.js`
   - 오답노트 데이터 렌더링
@@ -328,9 +299,9 @@ feature/wrong-note
 ### Step ID
 
 ```txt
-step-1
-step-2
-step-3
+step1
+step2
+step3
 coupon
 point
 ```
@@ -338,21 +309,25 @@ point
 ### localStorage key
 
 ```txt
-slowKioskProgress
+slowkiosk.progress
 slowKioskWrongNotes
 slowKioskFontSize
+practiceFreeKioskSize
 ```
 
 ### 오답 데이터 예시
 
 ```js
 {
-  id: 1720780000000,
-  stepId: "step-2",
-  stepTitle: "옵션 선택",
-  reason: "아이스/핫 선택을 놓쳤어요",
-  retryUrl: "/practice/step-2/",
-  date: "2026-07-12"
+  id: "1720780000000-ab12cd",
+  stepId: "step2",
+  stepTitle: "2단계: 옵션 선택",
+  reason: "온도 옵션을 다시 확인해 주세요.",
+  details: [{ mistakeType: "temperature", label: "온도" }],
+  status: "unresolved",
+  retryUrl: "/tutorial/?step=step2&mode=practice&retry=1720780000000-ab12cd",
+  date: "2026. 7. 12.",
+  attemptCount: 1
 }
 ```
 
@@ -369,6 +344,12 @@ slowKioskFontSize
 9. 최종 디자인 정리
 
 ## localStorage 초기화
-개발자 도구 콘솔[F12]에서 아래를 실행
+
+개발·테스트 중 저장된 학습 기록을 초기화하려면 브라우저 개발자 도구(`F12`)의 콘솔에서 다음 명령을 실행합니다.
+
+```js
 localStorage.clear();
 location.reload();
+```
+
+> `localStorage.clear()`는 현재 도메인에 저장된 모든 로컬 데이터를 삭제하므로 운영 환경에서는 주의해서 사용해야 합니다.
