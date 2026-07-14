@@ -249,11 +249,97 @@ function onPay(payId) {
     passStep();
 }
 
-//  판정 훅  — 지금은 흐름 확인용 stub
-function judgeStrict(m, o) {
-    // TODO: m.target 과 o 조합 비교 후 오답이면 reportWrong + return false
+function shouldSaveMistake(mission) {
+  // Step 3는 가이드 없는 실전이므로 바로 저장
+  if (mission.judge === "real") {
     return true;
+  }
+
+  // Step 2·쿠폰·포인트는 practice에서만 저장
+  return state.phase === "practice";
 }
+
+function saveMissionErrors(mission, result) {
+  if (!shouldSaveMistake(mission)) {
+    return;
+  }
+
+  const errors = result.errors ?? [];
+
+  if (errors.length === 0) {
+    return;
+  }
+
+  const isNumberedStep =
+    state.stepId.startsWith("step");
+
+  const stepNumber = isNumberedStep
+    ? Number(state.stepId.replace("step", ""))
+    : null;
+
+  SlowKioskStorage.saveMistake({
+    missionId: state.stepId,
+    step: stepNumber,
+    practiceType: mission.judge,
+
+    mistakeType:
+      errors.length === 1
+        ? errors[0].mistakeType
+        : "multiple",
+
+    mission: mission.title,
+
+    reason:
+      errors.length === 1
+        ? errors[0].reason
+        : `확인이 필요한 항목이 ${errors.length}개 있어요.`,
+
+    // 세부 오답 목록
+    errors: errors.map(error => ({
+      mistakeType: error.mistakeType,
+      reason: error.reason,
+      selectedValue: error.selectedValue,
+      expectedValue: error.expectedValue,
+      retryAction: error.retryAction
+    })),
+
+    selectedValue:
+      errors.map(error => error.selectedValue),
+
+    expectedValue:
+      errors.map(error => error.expectedValue),
+
+    retryPage: "tutorial",
+    retryAction: "retry-mission"
+  });
+}
+
+window.saveMissionErrors = saveMissionErrors;
+
+//  판정 훅  — 지금은 흐름 확인용 stub
+function judgeStrict(mission, options) {
+  const result =
+    SlowKioskValidator.validateMission(
+      mission,
+      {
+        menuId: state.pendingMenu,
+        temp: options.temp,
+        size: options.size,
+        qty: options.qty,
+        place: options.place
+      }
+    );
+
+  if (result.isCorrect) {
+    return true;
+  }
+
+  saveMissionErrors(mission, result);
+  reportWrong(result.errors[0].reason);
+
+  return false;
+}
+
 function reportWrong(reason) {
     flash("❌ " + reason);
     console.log("[오답]", state.stepId, reason);
