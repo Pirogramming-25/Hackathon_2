@@ -41,6 +41,27 @@ const payModal = document.getElementById("payModal");
 
 const MENU_BY_ID = Object.fromEntries(MENUS.map(m => [m.id, m]));
 const STEP_ORDER = ["step1", "step2", "step3"];
+const KIOSK_SIZE_KEY = "practiceFreeKioskSize";
+
+function applyKioskSize(size) {
+    const nextSize = size === "large" ? "large" : "normal";
+    document.body.classList.toggle("kiosk-size-large", nextSize === "large");
+    document.body.classList.toggle("kiosk-size-normal", nextSize === "normal");
+
+    document.querySelectorAll("[data-kiosk-size]").forEach(button => {
+        const isActive = button.dataset.kioskSize === nextSize;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    localStorage.setItem(KIOSK_SIZE_KEY, nextSize);
+}
+
+document.querySelectorAll("[data-kiosk-size]").forEach(button => {
+    button.addEventListener("click", () => applyKioskSize(button.dataset.kioskSize));
+});
+
+applyKioskSize(localStorage.getItem(KIOSK_SIZE_KEY));
 
 //  각 단계의 고정 미션 원본 스냅샷 (튜토리얼로 되돌릴 때 복원용)
 const FIXED_MISSION = {};
