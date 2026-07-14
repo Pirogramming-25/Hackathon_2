@@ -395,8 +395,10 @@ function onPay(payId) {
         }
     }
 
-    // 오답노트에서 다시 연습해 성공한 경우 기존 카드를 완료 처리한다.
+    // 기본 Step 1·2·3을 오답노트에서 다시 연습해 성공한 경우 완료 처리한다.
+    // 심화 단계는 advancedPassStep()의 실제 판정이 성공한 뒤에 처리한다.
     if (
+        isBaseStep() &&
         state.retryNoteId &&
         typeof markWrongNoteResolved === "function"
     ) {
@@ -666,7 +668,9 @@ function getShortWrongMessage(details) {
         size: "크기 옵션을 다시 확인해 주세요",
         quantity: "수량을 다시 확인해 주세요",
         orderType: "매장·포장 옵션을 다시 확인해 주세요",
-        paymentMethod: "결제 방법을 다시 확인해 주세요"
+        paymentMethod: "결제 방법을 다시 확인해 주세요",
+        coupon: "쿠폰 사용 여부를 다시 확인해 주세요",
+        point: "포인트 적립 여부를 다시 확인해 주세요"
     };
 
     return messages[firstError.mistakeType]
@@ -911,8 +915,12 @@ const isBase = STEP_ORDER.includes(startStepId);
 const halfDone = isBase && startStepId !== "step3"
     && typeof getProgressAll === "function"
     && (getProgressAll()[startStepId] || 0) === 50;
-// 오답노트 다시 연습(mode=practice)도 튜토리얼을 건너뛰고 실습으로 진입
-const retryPractice = !!(retryParam && modeParam === "practice" && isBase);
+// 오답노트 다시 연습(mode=practice)은 기본·심화 모두 튜토리얼을 건너뛰고 실습으로 진입
+const retryPractice = !!(
+    retryParam &&
+    modeParam === "practice" &&
+    VALID_STEPS.includes(startStepId)
+);
 
 startStep(startStepId, (halfDone || retryPractice) ? "practice" : "tutorial");
 if (retryPractice) state.retryNoteId = retryParam;
