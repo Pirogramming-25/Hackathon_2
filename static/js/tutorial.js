@@ -24,7 +24,8 @@ const state = {
 
 //  DOM 
 const wrap = document.getElementById("wrap");
-const missionText = document.getElementById("missionText");
+const missionBadge = document.getElementById("missionBadge");
+const missionRows = document.getElementById("missionRows");
 const tabList = document.getElementById("tabList");
 const menuGrid = document.getElementById("menuGrid");
 const cartList = document.getElementById("cartList");
@@ -71,7 +72,53 @@ function applyMission() {
             target: Object.assign({}, FIXED_MISSION[stepId].target),
         });
     }
-    missionText.textContent = MISSIONS[stepId].title;
+    renderMissionCard();
+}
+
+const STEP_BADGE = {
+    step1: "1단계 목표", step2: "2단계 목표", step3: "3단계 목표",
+    coupon: "심화 목표", point: "심화 목표",
+};
+
+//  왼쪽 미션 카드: 배지(N단계 목표) + 항목별 행(메뉴/온도/크기/수량/이용 방식 ...)
+//  해당 미션에 없는 조건(target 에 키가 없거나, 온도 선택이 없는 iceOnly 메뉴)은 행 자체를 만들지 않는다.
+function renderMissionCard() {
+    const mission = MISSIONS[state.stepId];
+    const t = mission.target || {};
+    const menu = MENU_BY_ID[mission.correctMenu];
+
+    missionBadge.textContent = STEP_BADGE[state.stepId] || "목표";
+
+    const rows = [["메뉴", menu.name]];
+
+    if (t.temp !== undefined && !menu.iceOnly) {
+        rows.push(["온도", getOptionLabel(mission, "temp", t.temp)]);
+    }
+    if (t.size !== undefined) {
+        rows.push(["크기", getOptionLabel(mission, "size", t.size)]);
+    }
+    if (t.qty !== undefined) {
+        rows.push(["수량", `${t.qty}잔`]);
+    }
+    if (t.place !== undefined) {
+        rows.push(["이용 방식", getOptionLabel(mission, "place", t.place)]);
+    }
+    const payMethod = t.payMethod ?? t.payment;
+    if (payMethod !== undefined) {
+        rows.push(["결제", getOptionLabel(mission, "payment", payMethod)]);
+    }
+    if (t.useCoupon !== undefined) {
+        rows.push(["쿠폰", t.useCoupon ? "O" : "X"]);
+    }
+    if (t.usePoint !== undefined) {
+        rows.push(["적립", t.usePoint ? "O" : "X"]);
+    }
+
+    missionRows.innerHTML = rows
+        .map(([label, value]) =>
+            `<div class="mission-row"><span class="mission-row-label">${label}</span><span class="mission-row-value">${value}</span></div>`
+        )
+        .join("");
 }
 
 //  진입점
@@ -659,8 +706,8 @@ function resetRun() {
     state.timeExpired = false;
     closeModals();
     startTimer(MISSIONS[state.stepId].timeLimit || 120);
-    // 미션 문구는 현재 MISSIONS[stepId].title (applyMission 이 이미 단계/실습 라벨을 포함해 둠)
-    missionText.textContent = MISSIONS[state.stepId].title;
+    // 미션 카드는 현재 MISSIONS[stepId] (applyMission 이 이미 단계/실습에 맞게 확정해 둠)
+    renderMissionCard();
 }
 
 function passStep() {
