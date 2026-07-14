@@ -24,7 +24,7 @@
       <button class="btn-exit" id="btnExit">&lt; 나가기</button>
 
       <div class="mission-bar" id="missionBar">
-        <span class="mission-emoji">🧑</span>
+        <span class="mission-emoji"></span>
         <span class="mission-text" id="missionText">1단계: 따뜻한 아메리카노 담기</span>
       </div>
 
@@ -234,8 +234,10 @@
       <p class="done-text" id="advDoneText">심화 단계를 끝내셨습니다!</p>
       <p class="done-sub">다른 심화 과정도 연습해 보세요.</p>
       <div class="done-actions">
-        <a class="done-btn done-coupon" id="advDoneCouponBtn" href="/tutorial/?step=coupon"><span class="done-btn-emoji">🎫</span>쿠폰 사용</a>
-        <a class="done-btn done-point" id="advDonePointBtn" href="/tutorial/?step=point"><span class="done-btn-emoji">⭐</span>포인트 적립</a>
+        <a class="done-btn done-coupon" id="advDoneCouponBtn" href="/tutorial/?step=coupon"><span
+            class="done-btn-emoji">🎫</span>쿠폰 사용</a>
+        <a class="done-btn done-point" id="advDonePointBtn" href="/tutorial/?step=point"><span
+            class="done-btn-emoji">⭐</span>포인트 적립</a>
       </div>
       <a class="done-home" href="/">나가기</a>
     </div>
@@ -256,11 +258,11 @@
     </div>
   </div>
 
-  <script src="{% static 'js/progress.js' %}"></script>
-  <script src="{% static 'js/missions.js' %}"></script>
-  <script src="{% static 'js/storage.js' %}"></script>
-  <script src="{% static 'js/tutorial.js' %}"></script>
-  <script src="{% static 'js/advanced_tutorial.js' %}"></script>
+  <script src="{% static 'js/progress.js' %}?v=4"></script>
+  <script src="{% static 'js/missions.js' %}?v=4"></script>
+  <script src="{% static 'js/storage.js' %}?v=4"></script>
+  <script src="{% static 'js/tutorial.js' %}?v=4"></script>
+  <script src="{% static 'js/advanced_tutorial.js' %}?v=4"></script>
 </body>
 
 </html>
