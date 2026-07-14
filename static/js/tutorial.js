@@ -287,6 +287,7 @@ function passStep() {
     const hasGuide = !!MISSIONS[state.stepId].guide;
     if (hasGuide && state.phase === "tutorial") {
         console.log("[통과]", state.stepId, "tutorial→practice");
+        if (typeof setStepProgress === "function") setStepProgress(state.stepId, 50); // 튜토리얼 완료 = 50%
         flash("잘하셨어요! 이번엔 안내 없이 직접 해볼까요?");
         state.phase = "practice";
         resetRun();
@@ -295,6 +296,7 @@ function passStep() {
     }
 
     // 실습까지 통과했거나 3단계(가이드 없음) → 다음 단계로, 마지막이면 완료 화면
+    if (typeof setStepProgress === "function") setStepProgress(state.stepId, 100); // 실습/실전 완료 = 100%
     flash("잘하셨어요!");
     console.log("[통과]", state.stepId, state.phase);
     const idx = STEP_ORDER.indexOf(state.stepId);
