@@ -155,8 +155,17 @@
       button.disabled = true;
     } else {
       button.addEventListener("click", () => {
-        window.location.href = note.retryUrl ||
-          `/tutorial/?step=${encodeURIComponent(note.stepId)}`;
+        const retryUrl = new URL(
+          note.retryUrl || "/tutorial/",
+          window.location.origin
+        );
+
+        retryUrl.searchParams.set("step", note.stepId);
+        retryUrl.searchParams.set("mode", "practice");
+        retryUrl.searchParams.set("retry", note.id);
+
+        window.location.href =
+          retryUrl.pathname + retryUrl.search + retryUrl.hash;
       });
     }
 

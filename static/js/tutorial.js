@@ -672,7 +672,7 @@ function reportWrong(reason, details = []) {
         (isPractice || isStep3) &&
         typeof saveWrongNote === "function"
     ) {
-        const savedNote = saveWrongNote({
+        saveWrongNote({
             stepId: state.stepId,
             stepTitle: MISSIONS[state.stepId].title,
             reason,
@@ -681,9 +681,8 @@ function reportWrong(reason, details = []) {
             retryUrl: `/tutorial/?step=${encodeURIComponent(state.stepId)}`
         });
 
-        if (savedNote?.id) {
-            state.retryNoteId = savedNote.id;
-        }
+        // 일반 학습에서 새로 저장한 오답 ID는 state에 넣지 않는다.
+        // retryNoteId는 오답노트의 '다시 연습' URL로 들어왔을 때만 존재해야 한다.
     }
 
     console.log(
