@@ -73,7 +73,7 @@ function renderAdvancedUI() {
         if (spotlight) {
             document.querySelectorAll(".menu-item.hl, #btnPay.hl").forEach(el => el.classList.add("hl-pop"));
         }
-        btnSkip.hidden = state.phase === "practice";
+        btnSkip.hidden = !hasGuide || state.phase === "practice";
         return;
     }
 
