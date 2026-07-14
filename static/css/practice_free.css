@@ -818,7 +818,7 @@ body {
 
 .practice-toast {
     position: fixed;
-    top: 20px;
+    top: 105px;
     left: 50%;
     z-index: 100;
     transform: translateX(-50%);
