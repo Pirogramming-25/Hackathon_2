@@ -105,6 +105,14 @@ body.font-xlarge {
   border-radius: calc(24px * var(--home-scale));
   background: var(--color-soft-box);
   box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+  transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.continue-card:hover,
+.continue-card:focus-within {
+  translate: 0 calc(-8px * var(--step-scale));
+  border-color: var(--color-accent);
+  box-shadow: 0 16px 28px rgba(17, 24, 39, 0.18);
 }
 
 .continue-card span {
@@ -720,6 +728,7 @@ body.font-xlarge .step-card-3 {
   .step-card,
   .advanced-card,
   .free-practice-card,
+  .continue-card,
   .step-card::after {
     transition: none;
   }
@@ -732,7 +741,9 @@ body.font-xlarge .step-card-3 {
   .advanced-card:active,
   .free-practice-card:hover,
   .free-practice-card:focus-visible,
-  .free-practice-card:active {
+  .free-practice-card:active,
+  .continue-card:hover,
+  .continue-card:focus-within {
     translate: 0 0;
   }
 }
