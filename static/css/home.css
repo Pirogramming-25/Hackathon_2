@@ -228,18 +228,6 @@ body.font-xlarge {
   transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
-.step-card::after {
-  content: "›";
-  position: absolute;
-  right: calc(30px * var(--step-scale));
-  bottom: calc(26px * var(--step-scale));
-  font-size: calc(2rem * var(--step-scale));
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: opacity .2s ease, transform .2s ease;
-}
 
 .step-card:hover,
 .step-card:focus-visible {
