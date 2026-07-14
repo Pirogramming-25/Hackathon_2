@@ -31,5 +31,38 @@ function applyProgressToHome() {
     });
 }
 
+//  홈 상단의 '이어서 학습하기' 카드를 저장된 진행도에 맞게 갱신한다.
+function applyContinueToHome() {
+    const stepEl = document.getElementById("continue-step");
+    const titleEl = document.getElementById("continue-title");
+    const linkEl = document.getElementById("continue-link");
+    if (!stepEl || !titleEl || !linkEl) return;
+
+    const all = getProgressAll();
+    const steps = [
+        { id: "step1", badge: "1단계", title: "기본 주문" },
+        { id: "step2", badge: "2단계", title: "옵션 선택" },
+        { id: "step3", badge: "3단계", title: "실전 주문" },
+    ];
+    const nextStep = steps.find(step => (all[step.id] || 0) < 100);
+
+    if (!nextStep) {
+        stepEl.textContent = "학습 완료";
+        titleEl.textContent = "자유 연습";
+        linkEl.textContent = "자유롭게 연습하기 >";
+        linkEl.href = "/practice/free/";
+        return;
+    }
+
+    const progress = all[nextStep.id] || 0;
+    stepEl.textContent = nextStep.badge;
+    titleEl.textContent = nextStep.title;
+    linkEl.textContent = progress > 0 ? "이어서 학습하기 >" : "학습 시작하기 >";
+    linkEl.href = `/tutorial/?step=${nextStep.id}`;
+}
+
 //  홈에 step-card 가 있으면 자동 적용 (튜토리얼 페이지엔 없으므로 무해)
-document.addEventListener("DOMContentLoaded", applyProgressToHome);
+document.addEventListener("DOMContentLoaded", () => {
+    applyProgressToHome();
+    applyContinueToHome();
+});
