@@ -214,6 +214,7 @@ body.font-xlarge {
 
 .step-card {
   aspect-ratio: var(--step-card-ratio);
+  position: relative;
   min-width: 0;
   min-height: unset;
   display: flex;
@@ -221,8 +222,41 @@ body.font-xlarge {
   justify-content: space-between;
   text-decoration: none;
   padding: calc(52px * var(--step-scale)) calc(38px * var(--step-scale)) calc(40px * var(--step-scale));
+  border: calc(2px * var(--step-scale)) solid transparent;
   border-radius: calc(20px * var(--step-scale));
   box-shadow: 0 7px 14px rgba(17, 24, 39, 0.12);
+  transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.step-card::after {
+  content: "›";
+  position: absolute;
+  right: calc(30px * var(--step-scale));
+  bottom: calc(26px * var(--step-scale));
+  font-size: calc(2rem * var(--step-scale));
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.step-card:hover,
+.step-card:focus-visible {
+  translate: 0 calc(-8px * var(--step-scale));
+  box-shadow: 0 16px 28px rgba(17, 24, 39, 0.18);
+  border-color: currentColor;
+}
+
+.step-card:hover::after,
+.step-card:focus-visible::after {
+  opacity: .55;
+  transform: translateX(0);
+}
+
+.step-card:active {
+  translate: 0 calc(-4px * var(--step-scale));
+  transition-duration: .05s;
 }
 
 .step-card span {
@@ -309,6 +343,20 @@ body.font-xlarge {
   box-shadow: 0 5px 12px rgba(17, 24, 39, 0.08);
   font-size: calc(1.45rem * var(--step-scale));
   font-weight: 900;
+  transition: translate .2s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+}
+
+.advanced-card:hover,
+.advanced-card:focus-visible {
+  translate: 0 calc(-6px * var(--step-scale));
+  border-color: var(--color-accent);
+  background: #fff1de;
+  box-shadow: 0 12px 22px rgba(17, 24, 39, 0.15);
+}
+
+.advanced-card:active {
+  translate: 0 calc(-3px * var(--step-scale));
+  transition-duration: .05s;
 }
 
 .free-practice-card {
@@ -322,12 +370,25 @@ body.font-xlarge {
   column-gap: calc(44px * var(--step-scale));
   row-gap: calc(12px * var(--step-scale));
   padding: calc(38px * var(--step-scale)) calc(38px * var(--step-scale)) calc(42px * var(--step-scale));
-  border: 0;
+  border: calc(2px * var(--step-scale)) solid transparent;
   border-radius: calc(20px * var(--step-scale));
   background: #ffe9b3;
   color: #7a3f00;
   box-shadow: 0 7px 14px rgba(17, 24, 39, 0.12);
   text-decoration: none;
+  transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.free-practice-card:hover,
+.free-practice-card:focus-visible {
+  translate: 0 calc(-6px * var(--step-scale));
+  border-color: #7a3f00;
+  box-shadow: 0 14px 26px rgba(17, 24, 39, 0.2);
+}
+
+.free-practice-card:active {
+  translate: 0 calc(-3px * var(--step-scale));
+  transition-duration: .05s;
 }
 
 .free-practice-card span {
@@ -663,5 +724,27 @@ body.font-xlarge .step-card-3 {
   .step-section .container,
   body.font-xlarge .step-section .container {
     width: min(calc(100% - 32px), var(--container-width));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .step-card,
+  .advanced-card,
+  .free-practice-card,
+  .step-card::after {
+    transition: none;
+  }
+
+  .step-card:hover,
+  .step-card:focus-visible,
+  .step-card:active,
+  .advanced-card:hover,
+  .advanced-card:focus-visible,
+  .advanced-card:active,
+  .free-practice-card:hover,
+  .free-practice-card:focus-visible,
+  .free-practice-card:active {
+    translate: 0 0;
   }
 }
