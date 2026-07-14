@@ -47,11 +47,11 @@ const MISSIONS = {
 
     //  Step 1 : 기본 (클릭 흐름 익히기)
     step1: {
-        title: "1단계: 따뜻한 아메리카노 담기",
+        title: "1단계: 아메리카노 담기",
         judge: "flow",
         timeLimit: 120,
         correctMenu: "americano",
-        target: { temp: "hot", size: "small", qty: 1, place: "eatin" },
+        target: { qty: 1 },
         options: OPTION_SET,
         guide: {
             menu: { text: "아메리카노를 눌러 주세요", highlight: "americano" },
