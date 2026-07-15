@@ -18,6 +18,7 @@ RUN python -m pip install --upgrade pip \
 COPY . .
 
 RUN mkdir -p /app/data /app/staticfiles \
+    && sed -i 's/\r$//' /app/docker-entrypoint.sh \
     && chmod +x /app/docker-entrypoint.sh \
     && chown -R django:django /app
 
